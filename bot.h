@@ -22,9 +22,9 @@ public:
 	         int    minrNum;   //Кол-во накопленных минералов
 	         cond   condition; //Состояние
 
-	unsigned short  red;       //       красного
-	unsigned short  green;     //Кол-во зелёного
-	unsigned short  blue;      //       синего
+	         short  red;       //       красного
+	         short  green;     //Кол-во зелёного
+	         short  blue;      //       синего
 	         drct   direct;    //Текущее направление
 	         int    chainPrev; //Cсылка на предыдущего бота в цепочке
 	         int    chainNext; //Cсылка на следующего  бота в цепочке
@@ -36,6 +36,10 @@ public:
 	unsigned int getY(unsigned short n); //Получение Y-координаты по направлению
 	bool isRelative(bot _bot); //Определяет, родственник ли _bot
 
+	void goRed  (short n);
+	void goGreen(short n);
+	void goBlue (short n);
+	 
 	void step(); //Главная функция жизнидеятельности
 	~bot();
 };

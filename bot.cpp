@@ -129,6 +129,45 @@ bool bot::isRelative(bot _bot) {
 	return true;
 }
 
+void bot::goRed(short n) {
+	red += n;
+	if (red > 255)
+		red = 255;
+
+	green -= n;
+	blue -= n;
+	if (green < 0)
+		green = 0;
+	if (blue < 0)
+		blue = 0;
+}
+
+void bot::goGreen(short n) {
+	green += n;
+	if (green > 255)
+		green = 255;
+
+	red -= n;
+	blue -= n;
+	if (red < 0)
+		red = 0;
+	if (blue < 0)
+		blue = 0;
+}
+
+void bot::goBlue(short n) {
+	blue += n;
+	if (blue > 255)
+		blue = 255;
+
+	red -= n;
+	green -= n;
+	if (red < 0)
+		red = 0;
+	if (green < 0)
+		green = 0;
+}
+
 void bot::step() {
 	//Если бот - органика, то выходим из функции
 	if (condition = organic_hold)
