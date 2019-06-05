@@ -499,9 +499,47 @@ void bot::step() {
 			 стена           +2
 			 пусто           +3
 			 органика        +4
+			 успешно         +5
 		*/
-		else if (command == 32 || command == 42) {
+		else if (command == 32 || command == 42) { //Шансы появления этой команды увеличены
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] % 16);
+			}
+			else
+				param = (DNA[++IP] % 16); //Считываем следующий за командой байт и вычисляем остаток от деления на 16
+
+			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
+			unsigned int y = getY(param + direct); //
 			
+
+			if (world[x][y] == empty) //Если пусто
+				incIP(2);
+			else if (world[x][y] == wall)  //Если стена
+				incIP(3);
+			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
+				incIP(4);
+			else { //Остался один вариант - впереди живой бот
+				int hlt0 = energy;                   // определим количество энергии и минералов
+				int hlt1 = bots[world[x][y]].energy; // у бота и его соседа
+				int min0 = minrNum;
+				int min1 = bots[world[x][y]].minrNum;
+
+				if (hlt0 > hlt1) //Eсли у бота больше энергии, чем у соседа
+				{
+					int hlt = (hlt0 - hlt1) / 2; //Tо распределяем энергию поровну
+					energy -= hlt;
+					bots[world[x][y]].energy += hlt;
+				}
+				if (min0 > min1) //Если у бота больше минералов, чем у соседа
+				{
+					int min = (min0 - min1) / 2; //То распределяем их поровну
+					minrNum -= min;
+					bots[world[x][y]].minrNum += min;
+				}
+				incIP(5);
+			}
 		}
 
 		/*Делится в абсолютном направлении
@@ -509,10 +547,71 @@ void bot::step() {
 			 стена           +2
 			 пусто           +3
 			 органика        +4
+			 успешно         +5
 		*/
-		else if (command == 33 || command == 43) {
+		else if (command == 33 || command == 43) { //Шансы появления этой команды увеличены
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] % 16);
+			}
+			else
+				param = (DNA[++IP] % 16); //Считываем следующий за командой байт и вычисляем остаток от деления на 16
+
+			unsigned int x = getX(param); //Вычисляем координаты клетки
+			unsigned int y = getY(param); //
+
+
+			if (world[x][y] == empty) //Если пусто
+				incIP(2);
+			else if (world[x][y] == wall)  //Если стена
+				incIP(3);
+			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
+				incIP(4);
+			else { //Остался один вариант - впереди живой бот
+				int hlt0 = energy;                   // определим количество энергии и минералов
+				int hlt1 = bots[world[x][y]].energy; // у бота и его соседа
+				int min0 = minrNum;
+				int min1 = bots[world[x][y]].minrNum;
+
+				if (hlt0 > hlt1) //Eсли у бота больше энергии, чем у соседа
+				{
+					int hlt = (hlt0 - hlt1) / 2; //Tо распределяем энергию поровну
+					energy -= hlt;
+					bots[world[x][y]].energy += hlt;
+				}
+				if (min0 > min1) //Если у бота больше минералов, чем у соседа
+				{
+					int min = (min0 - min1) / 2; //То распределяем их поровну
+					minrNum -= min;
+					bots[world[x][y]].minrNum += min;
+				}
+				incIP(5);
+			}
+		}
+		
+		/*Отдать в относительном направлении
+			Если
+			 стена           +2
+			 пусто           +3
+			 органика        +4
+			 успешно         +5
+		*/
+		else if (command == 34 || command == 44) {
 
 		}
+
+		/*Отдать в абсолютном направлении
+			Если
+			 стена           +2
+			 пусто           +3
+			 органика        +4
+			 успешно         +5
+		*/
+		else if (command == 35 || command == 45) {
+
+		}
+
 	}
 }
 
