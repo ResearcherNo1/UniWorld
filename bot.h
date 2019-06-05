@@ -26,8 +26,8 @@ public:
 	         short  green;     //Кол-во зелёного
 	         short  blue;      //       синего
 	         drct   direct;    //Текущее направление
-	         int    chainPrev; //Cсылка на предыдущего бота в цепочке
-	         int    chainNext; //Cсылка на следующего  бота в цепочке
+				size_t chainPrev; //Cсылка на предыдущего бота в цепочке
+				size_t chainNext; //Cсылка на следующего  бота в цепочке
 	         size_t n;         //Итератор в векторе bots 
 
 	bot(unsigned int X, unsigned int Y, bot* parent = nullptr, size_t N = 0, bool free = true);

@@ -2,7 +2,7 @@
 //
 #include "bot.h"
 
-extern int world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)];
+extern size_t world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)];
 extern std::vector<bot> bots;
 extern int season;
 bot* b;
@@ -205,7 +205,7 @@ void bot::step() {
 			}
 
 			if (param > 7) //Результат должен быть в пределах 0 ... 7
-				param - 8;
+				param -= 8;
 			direct = static_cast<drct>(param);
 			incIP(1);
 		}
@@ -235,7 +235,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
+			int hlt = std::lround(season - ((coorY + 1) % 6) + t); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -378,8 +378,8 @@ void bot::step() {
 				//
 				//--------- дошли до сюда, значит впереди живой бот -------------------
 				//
-				unsigned int min0 = minrNum; //Кол-во минералов у бота
-				unsigned int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
+				int min0 = minrNum; //Кол-во минералов у бота
+				int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
 				int hl = bots[world[x][y]].energy;  //Кол-во энергии
 
 				//Если у бота минералов больше
@@ -450,8 +450,8 @@ void bot::step() {
 				//
 				//--------- дошли до сюда, значит впереди живой бот -------------------
 				//
-				unsigned int min0 = minrNum; //Кол-во минералов у бота
-				unsigned int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
+				int min0 = minrNum; //Кол-во минералов у бота
+				int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
 				int hl = bots[world[x][y]].energy;  //Кол-во энергии
 
 				//Если у бота минералов больше
@@ -504,7 +504,7 @@ void bot::step() {
 
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
-			int wc = world[x][y]; //Определяем объект
+			size_t wc = world[x][y]; //Определяем объект
 
 			if (wc == empty) { //Если пусто
 				incIP(2);
@@ -542,7 +542,7 @@ void bot::step() {
 
 			unsigned int x = getX(param); //Вычисляем координаты клетки
 			unsigned int y = getY(param); //
-			int wc = world[x][y]; //Определяем объект
+			size_t wc = world[x][y]; //Определяем объект
 
 			if (wc == empty) { //Если пусто
 				incIP(2);
@@ -760,10 +760,10 @@ void bot::step() {
 			unsigned short param;
 			if (IP = 255) {
 				IP = 0;
-				param = (DNA[IP] * HEIGHT_COEF);
+				param = std::lround(DNA[IP] * HEIGHT_COEF);
 			}
 			else
-				param = (DNA[++IP] * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+				param = std::lround(DNA[++IP] * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
 
 			if (coorY < param)
 				incIP(2);
@@ -780,10 +780,10 @@ void bot::step() {
 			unsigned short param;
 			if (IP = 255) {
 				IP = 0;
-				param = (DNA[IP] * ENERGY_COEF);
+				param = std::lround(DNA[IP] * ENERGY_COEF);
 			}
 			else
-				param = (DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+				param = std::lround(DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
 
 			if (energy < param)
 				incIP(2);
@@ -801,10 +801,10 @@ void bot::step() {
 			if (IP = 255) {
 				IP = 0;
 
-				param = (DNA[IP] * ENERGY_COEF);
+				param = std::lround(DNA[IP] * ENERGY_COEF);
 			}
 			else
-				param = (DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+				param = std::lround(DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
 
 			if (minrNum < param)
 				incIP(2);
@@ -818,7 +818,7 @@ void bot::step() {
 			if (energy < 0) break;
 
 			int a = -1; //Переменная свободного направления
-			for (size_t i = 0; i < 8; i++) {
+			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
 				if (world[x][y] == empty) {
@@ -875,7 +875,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
+			int hlt = std::lround(season - ((coorY + 1) % 6) + t); //Формула вычисления энергии
 			if (hlt >= 3)
 				incIP(1);
 			else
@@ -930,7 +930,7 @@ void bot::step() {
 			if (energy < 0) break;
 
 			int a = -1; //Переменная свободного направления
-			for (size_t i = 0; i < 8; i++) {
+			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
 				if (world[x][y] == empty) {
@@ -1010,7 +1010,7 @@ void bot::step() {
 		//Если энергии больше 999, то плодим нового бота
 		if (energy > 999) {
 			int a = -1; //Переменная свободного направления
-			for (size_t i = 0; i < 8; i++) {
+			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
 				if (world[x][y] == empty) {

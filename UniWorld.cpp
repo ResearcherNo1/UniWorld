@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include "bot.h"
 
-int world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)]; //Массив мира
+size_t world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)]; //Массив мира
 std::vector<bot> bots;	//Вектор ботов
 int season; //9 - зима; 10 - весна, осень; 11 - лето
 
