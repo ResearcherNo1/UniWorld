@@ -9,7 +9,7 @@
 constexpr auto SCREEN_WIDTH  = 640;
 constexpr auto SCREEN_HEIGHT = 480;
 constexpr auto WORLD_WIDTH = SCREEN_WIDTH / 2;
-constexpr auto WORLD_HEIGHT = SCREEN_HEIGHT / 2;
+constexpr double WORLD_HEIGHT = SCREEN_HEIGHT / 2;
 constexpr auto BOTS_MAX = WORLD_WIDTH * WORLD_HEIGHT;
 
 //Bot constants
@@ -19,9 +19,13 @@ constexpr auto SUB_SIZE = 8;
 constexpr auto SUB_MAX_INDEX = SUB_SIZE - 1;
 enum cond {organic_hold = 1, organic_sink, alive, input };
 enum drct : unsigned short { upper_left, up = 1, upper_right, right = 3, bottom_right, down = 5, bottom_left, left = 7 };
+constexpr double HEIGHT_COEF = WORLD_HEIGHT / DNA_SIZE;
+constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
+constexpr auto FREE = true;
+constexpr auto CHAIN = false;
 
 //Navigation constants
-constexpr auto empty = 0;
+constexpr auto empty = -1;
 constexpr auto wall = BOTS_MAX + 10000;
 constexpr auto MAX_X = WORLD_WIDTH - 1;
 constexpr auto MAX_Y = WORLD_HEIGHT - 1;

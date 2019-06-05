@@ -2,19 +2,25 @@
 //
 #include "bot.h"
 
-extern int world[WORLD_WIDTH][WORLD_HEIGHT];
+extern int world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)];
 extern std::vector<bot> bots;
 extern int season;
+bot* b;
 
-bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t n) {
+bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	srand();
+	std::vector<bot>::iterator a = bots.begin() + N;
+	bots.insert(a, *this);
+	for (size_t i = N; i < bots.size(); i++) //Обновление итераторов
+		bots[i].n = i;
+
 	//Если нет родителей
 	if (parent == nullptr) {
 		for (size_t i = 0; i < DNA_SIZE; i++) //Заполняем код командой фотосинтез
 			DNA[i] = 25;
 		energy = 990;
 		minrNum = 0;
-		chainNext = chainPrev = 0;
+		chainNext = chainPrev = -1;
 		red = green = blue = 170;
 	}
 	else {
@@ -25,15 +31,37 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t n) {
 			//Копируем геном родителя
 			for (size_t i = 0; i < DNA_SIZE; i++)
 				DNA[i] = parent->DNA[i];
+
+			const size_t abc = mut_ptr + 4;
+
 			//Мутируем
-			for (mut_ptr; mut_ptr < mut_ptr + 8; mut_ptr++)
+			for (mut_ptr; mut_ptr < abc; mut_ptr++)
 				DNA[mut_ptr] = getRandomNumber(0, 255);
 		}
+
 		energy = (parent->energy) / 2;
+		parent->energy /= 2;
+
 		minrNum = (parent->minrNum) / 2;
+		parent->minrNum /= 2;
+
 		red = parent->red;
 		green = parent->green;
 		blue = parent->blue;
+
+#if free == false
+		if (parent->chainNext == -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
+			parent->chainNext = N; //То вставляем туда новорожденного бота
+			chainPrev = parent->n; //У новорожденного ссылка на предыдущего указывает на бота-предка
+			chainNext = -1;        //Ссылка на следующего пуста, новорожденный бот является крайним в цепочке
+		}
+		else //Если у бота-предка ссылка на предыдущего бота в многоклеточной цепочке пуста 
+		{
+			parent->chainPrev = N; // то вставляем туда новорожденного бота
+			chainNext = parent->n; // у новорожденного ссылка на следующего указывает на бота-предка
+			chainPrev = -1;        // ссылка на предыдущего пуста, новорожденный бот является крайним в цепочке 
+		}
+#endif
 	}
 	//Указатель инструкции в самом начале
 	IP = 0;
@@ -46,11 +74,10 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t n) {
 	heapPtr = 0;
 
 	coorX = X; coorY = Y;
+	world[X][Y] = N;
+
 	condition = alive;
 	direct = down;
-	std::vector<bot>::iterator a = bots.begin() + n;
-	bots.insert(a, *this);
-	world[X][Y] = n;
 }
 
 void bot::incIP(unsigned int num) {
@@ -121,7 +148,7 @@ void bot::step() {
 	//Если мы здесь, то бот живой
 	//
 
-	for (unsigned short cyc = 0; cyc < 15; cyc++) { //Разрешено не более 15 команд за ход
+	for (unsigned short cyc = 0; cyc < 25; cyc++) { //Разрешено не более 25 команд за ход
 		unsigned short command = DNA[IP]; //Текущая команда
 
 		//Относительная смена направления
@@ -162,13 +189,12 @@ void bot::step() {
 			//Вычисление коофэициента минералов
 			if (minrNum < 100)
 				t = 0;
-			else {
-				if (minrNum < 400)
-					t = 1;
-				else
-					t = 2;
-			}
-			double hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
+			else if (minrNum < 400)
+				t = 1;
+			else
+				t = 2;
+			
+			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -514,9 +540,9 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 			
 
-			if (world[x][y] == empty) //Если пусто
+			if (world[x][y] == wall) //Если стена
 				incIP(2);
-			else if (world[x][y] == wall)  //Если стена
+			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
 			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
 				incIP(4);
@@ -562,9 +588,9 @@ void bot::step() {
 			unsigned int y = getY(param); //
 
 
-			if (world[x][y] == empty) //Если пусто
+			if (world[x][y] == wall) //Если стена
 				incIP(2);
-			else if (world[x][y] == wall)  //Если стена
+			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
 			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
 				incIP(4);
@@ -598,7 +624,34 @@ void bot::step() {
 			 успешно         +5
 		*/
 		else if (command == 34 || command == 44) {
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] % 16);
+			}
+			else
+				param = (DNA[++IP] % 16); //Считываем следующий за командой байт и вычисляем остаток от деления на 16
+			
+			unsigned int x = getX(param + direct); //Получаем координаты клетки
+			unsigned int y = getY(param + direct); //
 
+			if (world[x][y] == wall) //Если стена
+				incIP(2);
+			else if (world[x][y] == empty) //Если пусто
+				incIP(3);
+			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
+				incIP(4);
+			else { //Если бот
+				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
+				bots[world[x][y]].energy += (energy / 4);
+
+				if (minrNum >= 4) { //Если у бота минералов больше 4
+					minrNum -= (minrNum / 4); //Бот отдаёт четверть свох минералов
+					bots[world[x][y]].minrNum += (minrNum / 4);
+					if (bots[world[x][y]].minrNum > 999)
+						bots[world[x][y]].minrNum = 999;
+				}
+			}
 		}
 
 		/*Отдать в абсолютном направлении
@@ -609,19 +662,272 @@ void bot::step() {
 			 успешно         +5
 		*/
 		else if (command == 35 || command == 45) {
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] % 16);
+			}
+			else
+				param = (DNA[++IP] % 16); //Считываем следующий за командой байт и вычисляем остаток от деления на 16
 
+			unsigned int x = getX(param); //Получаем координаты клетки
+			unsigned int y = getY(param); //
+
+			if (world[x][y] == wall) //Если стена
+				incIP(2);
+			else if (world[x][y] == empty) //Если пусто
+				incIP(3);
+			else if (bots[world[x][y]].condition <= organic_sink) //Если органика
+				incIP(4);
+			else { //Если бот
+				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
+				bots[world[x][y]].energy += (energy / 4);
+
+				if (minrNum >= 4) { //Если у бота минералов больше 4
+					minrNum -= (minrNum / 4); //Бот отдаёт четверть свох минералов
+					bots[world[x][y]].minrNum += (minrNum / 4);
+					if (bots[world[x][y]].minrNum > 999)
+						bots[world[x][y]].minrNum = 999;
+				}
+			}
 		}
 
+		//Выравнивание по горизонтали
+		else if (command == 36) {
+			srand();
+			if (getRandomNumber(0, 1) == 0)
+				direct = left;
+			else
+				direct = right;
+		}
+		
+		//Выравнивание по вертикали
+		else if (command == 37) {
+			srand();
+			if (getRandomNumber(0, 1) == 0)
+				direct = up;
+			else
+				direct = down;
+		}
+
+		/*Получение высоты бота
+		   Если
+			 меньше          +2
+			 равно/больше    +2
+		*/
+		else if (command == 38) {
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] * HEIGHT_COEF);
+			}
+			else
+				param = (DNA[++IP] * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+			
+			if (coorY < param)
+				incIP(2);
+			else
+				incIP(3);
+		}
+
+		/*Получение уровня энергии
+		   Если
+			 меньше          +2
+			 равно/больше    +2
+		*/
+		else if (command == 39) {
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+				param = (DNA[IP] * ENERGY_COEF);
+			}
+			else
+				param = (DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+		
+			if (energy < param)
+				incIP(2);
+			else
+				incIP(3);
+		}
+
+		/*Получение уровня минералов
+			Если
+			 меньше          +2
+			 равно/больше    +2
+		*/
+		else if (command == 40) {
+			unsigned short param;
+			if (IP = 255) {
+				IP = 0;
+
+				param = (DNA[IP] * ENERGY_COEF);
+			}
+			else
+				param = (DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+
+			if (minrNum < param)
+				incIP(2);
+			else
+				incIP(3);
+		}
+	
+		//Создание свободного живущего потомка
+		else if (command == 41) {
+			energy -= 150; //Бот затрачивает 150 единиц энергии
+			if (energy < 0) break;
+
+			int a = -1; //Переменная свободного направления
+			for (size_t i = 0; i < 8; i++) {
+				unsigned int x = getX(i);
+				unsigned int y = getY(i);
+				if (world[x][y] == empty) {
+					a = i;
+					break;
+				}
+			}
+			if (a == -1) { //Если нет свободного места
+				energy = 0; //Бот погибает
+				break;
+			}
+
+			if (b != nullptr)
+				delete b;
+
+			if (chainNext != -1 && chainPrev != -1)
+				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+			else
+				b = new bot(getX(a), getY(a), this, n + 1, FREE);
+			
+			incIP(1);
+			break;
+		}
+
+		/*Проверка на окружённость
+		  Если
+		   нет места вокруг +1
+			есть             +2
+		*/
+		else if (command == 46) {
+			for (short i = 0; i < 8; i++) {
+				unsigned int x = getX(i);
+				unsigned int y = getY(i);
+				if (world[x][y] == empty) {
+					incIP(1); break;
+				}
+				if (i == 7) {
+					incIP(2); break;
+				}
+			}
+		}
+
+		/*Проверка на приход энергии
+		  Если
+		   прибавляется     +1
+			не прибавляется  +2
+		*/
+		else if (command == 47) {
+			double t;
+			if (minrNum < 100) 
+				t = 0;
+			else if (minrNum < 400)
+				t = 1;
+			else 
+				t = 2;
+			
+			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
+			if (hlt >= 3)
+				incIP(1);
+			else
+				incIP(2);
+		}
+
+		/*Проверка на приход минералов
+		  Если
+			прибавляется     +1
+			не прибавляется  +2
+		*/
+		else if (command == 48) {
+			if (coorY > MAX_Y / 2)
+				incIP(1);
+			else
+				incIP(2);
+		}
+
+		/*Проверка на многоклеточность
+		  Если
+		   свободноживущий  +1
+			с краю цепочки   +2
+			внутри цепочки   +3
+		*/
+		else if (command == 49) {
+			if (chainNext == -1 && chainPrev == -1)
+				incIP(1);
+			else if (chainNext == -1 || chainPrev == -1)
+				incIP(2);
+			else
+				incIP(3);
+		}
+
+		//Преобразование минералов в энергию
+		else if (command == 50) {
+			if (minrNum > 100) {// максимальное количество минералов, которые можно преобразовать в энергию = 100
+				minrNum -= 100; // 1 минерал = 4 энергии
+				energy += 400;  //
+				goBlue(100);    // бот от этого синеет
+			}
+			else {  // если минералов меньше 100, то все минералы переходят в энергию
+				energy += minrNum * 4;
+				goBlue(minrNum);
+				minrNum = 0;
+			}
+		}
+
+		//Создание многоклеточного
+		else if (command == 51) {
+		energy -= 150; //Бот затрачивает 150 единиц энергии
+		if (energy < 0) break;
+
+		int a = -1; //Переменная свободного направления
+		for (size_t i = 0; i < 8; i++) {
+			unsigned int x = getX(i);
+			unsigned int y = getY(i);
+			if (world[x][y] == empty) {
+				a = i;
+				break;
+			}
+		}
+		if (a == -1) { //Если нет свободного места
+			energy = 0; //Бот погибает
+			break;
+		}
+
+		if (b != nullptr)
+			delete b;
+
+		if (chainNext != -1 && chainPrev != -1)
+			b = new bot(getX(a), getY(a), this, n + 1, FREE);
+		else
+			b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+
+		incIP(1);
+		break;
+		}
+	
+
 	}
+
+
 }
 
 bot::~bot() {
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
+	for (size_t i = n; i < bots.size(); i++) //Обновление итераторов
+		bots[i].n = i;
 
 	if (chainPrev > 0)           //Если во многоклеточной цепочке - тоже удаляем
-		bots[chainPrev].chainNext = 0;
+		bots[chainPrev].chainNext = -1;
 	if (chainNext > 0)
-		bots[chainNext].chainPrev = 0;
+		bots[chainNext].chainPrev = -1;
 }
