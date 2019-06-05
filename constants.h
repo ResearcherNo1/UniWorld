@@ -6,10 +6,10 @@
 #define CONSTANTS_H
 
 //Global constants
-constexpr auto SCREEN_WIDTH  = 640;
-constexpr auto SCREEN_HEIGHT = 480;
-constexpr auto WORLD_WIDTH = SCREEN_WIDTH / 2;
-constexpr double WORLD_HEIGHT = SCREEN_HEIGHT / 2;
+constexpr auto SCREEN_WIDTH  = 1280;
+constexpr auto SCREEN_HEIGHT = 720;
+constexpr auto WORLD_WIDTH = SCREEN_WIDTH / 4;
+constexpr double WORLD_HEIGHT = SCREEN_HEIGHT / 4;
 constexpr auto BOTS_MAX = WORLD_WIDTH * WORLD_HEIGHT;
 
 //Bot constants
@@ -30,7 +30,6 @@ constexpr auto wall = BOTS_MAX + 10000;
 constexpr auto MAX_X = WORLD_WIDTH - 1;
 constexpr auto MAX_Y = WORLD_HEIGHT - 1;
 
-#pragma warning(disable : 4996)
 #define srand(); 	/* Получить текущее время для генерации рандомайза.*/ /* ! Лучше делать с миллисекундами */ struct tm *st; const time_t timer = time(NULL); st = localtime(&timer); /* Перевод времени в секунды */ int rnd_seed = 3600 * st->tm_hour + 60 * st->tm_min + st->tm_sec; srand(rnd_seed);
 
 //Функция выбора случайного числа в выбраном диапазоне

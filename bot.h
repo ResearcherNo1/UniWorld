@@ -3,6 +3,8 @@
 #include "constants.h"
 #include <ctime>
 #include <vector>
+#include <algorithm> 
+
 #ifndef BOT_H
 #define BOT_H
 
@@ -31,7 +33,10 @@ public:
 	         size_t n;         //Итератор в векторе bots 
 
 	bot(unsigned int X, unsigned int Y, bot* parent = nullptr, size_t N = 0, bool free = true);
-	void incIP(unsigned int num); //Функция увeличения указателя текущей команды
+
+	void incIP(unsigned int num = 1); //Функция увeличения указателя текущей команды
+	unsigned short getParam(); //Функция получения параметра
+
 	unsigned int getX(unsigned short n); //Получение Х-координаты по направлению
 	unsigned int getY(unsigned short n); //Получение Y-координаты по направлению
 	bool isRelative(bot _bot); //Определяет, родственник ли _bot
