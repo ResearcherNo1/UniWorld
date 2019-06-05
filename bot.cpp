@@ -148,7 +148,9 @@ void bot::step() {
 	//Если мы здесь, то бот живой
 	//
 
-	for (unsigned short cyc = 0; cyc < 25; cyc++) { //Разрешено не более 25 команд за ход
+	//Если бот не находится в состоянии приёма сигнала
+	if (!(condition == input))
+		for (unsigned short cyc = 0; cyc < 25; cyc++) { //Разрешено не более 25 команд за ход
 		unsigned short command = DNA[IP]; //Текущая команда
 
 		//Относительная смена направления
@@ -193,7 +195,7 @@ void bot::step() {
 				t = 1;
 			else
 				t = 2;
-			
+
 			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
@@ -204,8 +206,8 @@ void bot::step() {
 		}
 
 		/*Шаг в относительном направлении
-		   Если
-		    удалось перейти +2
+			Если
+			 удалось перейти +2
 			 стена           +3
 			 органика        +4
 			 бот             +5
@@ -213,7 +215,7 @@ void bot::step() {
 		*/
 		else if (command == 26) {
 			//Если бот многоклеточный
-			if (chainPrev > 0 || chainNext > 0)
+			if (chainPrev != -1 || chainNext != -1)
 				//Никуда не двигаемся - ходить могут только одноклеточные
 				incIP(1);
 			else {
@@ -252,7 +254,7 @@ void bot::step() {
 		} //
 
 		/*Шаг в абсолютном направлении
-		   Если
+			Если
 			 удалось перейти +2
 			 стена           +3
 			 органика        +4
@@ -261,7 +263,7 @@ void bot::step() {
 		*/
 		else if (command == 27) {
 			//Если бот многоклеточный
-			if (chainPrev > 0 || chainNext > 0)
+			if (chainPrev != -1 || chainNext != -1)
 				//Никуда не двигаемся - ходить могут только одноклеточные
 				incIP(1);
 			else {
@@ -445,7 +447,7 @@ void bot::step() {
 		}
 
 		/*Посмотреть в относительном направлении
-		   Если
+			Если
 			 пусто           +2
 			 стена           +3
 			 органика        +4
@@ -521,7 +523,7 @@ void bot::step() {
 		}
 
 		/*Делится в относительном направлении
-		   Если
+			Если
 			 стена           +2
 			 пусто           +3
 			 органика        +4
@@ -538,7 +540,7 @@ void bot::step() {
 
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
-			
+
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -615,7 +617,7 @@ void bot::step() {
 				incIP(5);
 			}
 		}
-		
+
 		/*Отдать в относительном направлении
 			Если
 			 стена           +2
@@ -631,7 +633,7 @@ void bot::step() {
 			}
 			else
 				param = (DNA[++IP] % 16); //Считываем следующий за командой байт и вычисляем остаток от деления на 16
-			
+
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
@@ -700,7 +702,7 @@ void bot::step() {
 			else
 				direct = right;
 		}
-		
+
 		//Выравнивание по вертикали
 		else if (command == 37) {
 			srand();
@@ -711,7 +713,7 @@ void bot::step() {
 		}
 
 		/*Получение высоты бота
-		   Если
+			Если
 			 меньше          +2
 			 равно/больше    +2
 		*/
@@ -723,7 +725,7 @@ void bot::step() {
 			}
 			else
 				param = (DNA[++IP] * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
-			
+
 			if (coorY < param)
 				incIP(2);
 			else
@@ -731,7 +733,7 @@ void bot::step() {
 		}
 
 		/*Получение уровня энергии
-		   Если
+			Если
 			 меньше          +2
 			 равно/больше    +2
 		*/
@@ -743,7 +745,7 @@ void bot::step() {
 			}
 			else
 				param = (DNA[++IP] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
-		
+
 			if (energy < param)
 				incIP(2);
 			else
@@ -770,7 +772,7 @@ void bot::step() {
 			else
 				incIP(3);
 		}
-	
+
 		//Создание свободного живущего потомка
 		else if (command == 41) {
 			energy -= 150; //Бот затрачивает 150 единиц энергии
@@ -797,14 +799,14 @@ void bot::step() {
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 			else
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
-			
+
 			incIP(1);
 			break;
 		}
 
 		/*Проверка на окружённость
 		  Если
-		   нет места вокруг +1
+			нет места вокруг +1
 			есть             +2
 		*/
 		else if (command == 46) {
@@ -822,18 +824,18 @@ void bot::step() {
 
 		/*Проверка на приход энергии
 		  Если
-		   прибавляется     +1
+			прибавляется     +1
 			не прибавляется  +2
 		*/
 		else if (command == 47) {
 			double t;
-			if (minrNum < 100) 
+			if (minrNum < 100)
 				t = 0;
 			else if (minrNum < 400)
 				t = 1;
-			else 
+			else
 				t = 2;
-			
+
 			int hlt = season - ((coorY + 1) % 6) + t; //Формула вычисления энергии
 			if (hlt >= 3)
 				incIP(1);
@@ -855,7 +857,7 @@ void bot::step() {
 
 		/*Проверка на многоклеточность
 		  Если
-		   свободноживущий  +1
+			свободноживущий  +1
 			с краю цепочки   +2
 			внутри цепочки   +3
 		*/
@@ -880,43 +882,134 @@ void bot::step() {
 				goBlue(minrNum);
 				minrNum = 0;
 			}
+			break;
 		}
 
 		//Создание многоклеточного
 		else if (command == 51) {
-		energy -= 150; //Бот затрачивает 150 единиц энергии
-		if (energy < 0) break;
+			energy -= 150; //Бот затрачивает 150 единиц энергии
+			if (energy < 0) break;
 
-		int a = -1; //Переменная свободного направления
-		for (size_t i = 0; i < 8; i++) {
-			unsigned int x = getX(i);
-			unsigned int y = getY(i);
-			if (world[x][y] == empty) {
-				a = i;
+			int a = -1; //Переменная свободного направления
+			for (size_t i = 0; i < 8; i++) {
+				unsigned int x = getX(i);
+				unsigned int y = getY(i);
+				if (world[x][y] == empty) {
+					a = i;
+					break;
+				}
+			}
+			if (a == -1) { //Если нет свободного места
+				energy = 0; //Бот погибает
 				break;
 			}
-		}
-		if (a == -1) { //Если нет свободного места
-			energy = 0; //Бот погибает
+
+			if (b != nullptr)
+				delete b;
+
+			if (chainNext != -1 && chainPrev != -1)
+				b = new bot(getX(a), getY(a), this, n + 1, FREE);
+			else
+				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+
+			incIP(1);
 			break;
 		}
 
-		if (b != nullptr)
-			delete b;
-
-		if (chainNext != -1 && chainPrev != -1)
-			b = new bot(getX(a), getY(a), this, n + 1, FREE);
 		else
-			b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
-
-		incIP(1);
-		break;
-		}
-	
-
+			incIP(command);
 	}
+	else
+		condition = alive;
 
+	//
+	//Завершение шага
+	//
 
+		//Если бот в цепочке
+		if (chainNext != -1 && chainPrev != -1) {
+			//Делим минералы
+			unsigned int min = (minrNum + bots[chainNext].minrNum + bots[chainPrev].minrNum);
+			minrNum = (min / 3) + (min % 3);
+			bots[chainNext].minrNum = min;
+			bots[chainPrev].minrNum = min;
+
+			//Делим энергию
+			//
+			//Проверим, являются ли следующий и предыдущий боты в цепочке крайними
+			//Если они не являются крайними, то распределяем энергию поровну
+			//Связано это с тем, что в крайних ботах в цепочке должно быть больше энергии
+			//Чтобы они плодили новых ботов и удлиняли цепочку
+			if ((bots[chainNext].chainNext != -1 || bots[chainNext].chainPrev != -1) && (bots[chainPrev].chainNext != -1 || bots[chainPrev].chainPrev != -1)) {
+				unsigned int hlt = (energy + bots[chainNext].energy + bots[chainPrev].energy);
+				energy = (min / 3) + (min % 3);
+				bots[chainNext].energy = hlt;
+				bots[chainPrev].energy = hlt;
+			}
+		}
+		//Если бот имеет предыдущего в цепочке
+		else if (chainPrev != -1) { 
+			//Если предыдущий не является крайним в цепочке
+			if (bots[chainPrev].chainNext != -1 && bots[chainPrev].chainPrev != -1) {
+				//То распределяем энергию в пользу текущёго бота
+				unsigned int hlt = energy + bots[chainPrev].energy;
+				bots[chainPrev].energy = (hlt / 4) + (hlt % 4);
+				energy = hlt / 4 * 3;
+			}
+		}
+		//Если бот имеет предыдущего в цепочке
+		else if (chainNext != -1) { 
+			//Если предыдущий не является крайним в цепочке
+			if (bots[chainNext].chainNext != -1 && bots[chainNext].chainPrev != -1) {
+				//То распределяем энергию в пользу текущёго бота
+				unsigned int hlt = energy + bots[chainNext].energy;
+				bots[chainNext].energy = (hlt / 4) + (hlt % 4);
+				energy = hlt / 4 * 3;
+			}
+		}
+
+		//Если энергии больше 999, то плодим нового бота
+		if (energy > 999) {
+			int a = -1; //Переменная свободного направления
+			for (size_t i = 0; i < 8; i++) {
+				unsigned int x = getX(i);
+				unsigned int y = getY(i);
+				if (world[x][y] == empty) {
+					a = i;
+					break;
+				}
+			}
+			if (a == -1) //Если нет свободного места
+				energy = 0; //Бот погибает
+			else {
+				if (b != nullptr)
+					delete b;
+				if (chainNext == -1 && chainPrev == -1)
+					b = new bot(getX(a), getY(a), this, n + 1, FREE);
+				else
+					b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+			}
+		}
+		//Если энергии стало меньше 1
+		else if (energy < 1) {
+			condition = organic_sink; //Отмечаем как органику
+			if (chainPrev != -1)      //Если состоит во многоклеточной цепочке - удаляем
+				bots[chainPrev].chainNext = -1;
+			if (chainNext != -1)
+				bots[chainNext].chainPrev = -1;
+		}
+
+		//Если бот глубже, чем 48, то он начинает накапливать минералы
+		if (coorY > 48)
+			minrNum++;
+		else if (coorY > 66)
+			minrNum += 2;
+		else if (coorY > 88)
+			minrNum += 3;
+
+		//Проверка предела
+		if (minrNum > 999)
+			minrNum = 999;
 }
 
 bot::~bot() {
