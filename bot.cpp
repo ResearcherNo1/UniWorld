@@ -72,7 +72,7 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 
 	//Очищаем стек и регистры
 	for (size_t i = 0; i < SUB_SIZE; i++) {
-		stack[i] = 0;
+		stack[i] = -1;
 		registers[i] = 0;
 	}
 	heapPtr = 0;
@@ -200,9 +200,8 @@ void bot::step() {
 	//Если мы здесь, то бот живой
 	//
 
-	//Если бот не находится в состоянии приёма сигнала
+	//Если бот не находится в состоянии приёма
 	if (!(condition == input))
-
 		for (unsigned short cyc = 0; cyc < 25; cyc++) { //Разрешено не более 25 команд за ход
 		unsigned short command = DNA[IP]; //Текущая команда
 
@@ -1426,7 +1425,214 @@ void bot::step() {
 		}
 		
 		////////////////////////////////////
+		////////////////////////////////////
+
+		/*Команда вставки параметра в стек
+		   Если
+			 Удачно           +2
+			 Переполнен       +3
+		*/
+		else if (command == 112) {
+			unsigned short param = getParam();
+			if (heapPtr == 8)
+				incIP(3);
+				//energy -= 10; //Для мотивации ;)
+			else {
+				stack[heapPtr] = param;
+				heapPtr++;
+				incIP(2);
+			}
+		}
+
+		/*Команада взятия из стека в параметровый регистр
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 113) {
+			if (heapPtr == 0)
+				incIP(3);
+				//energy -= 10;
+			else {
+				unsigned short param = getParam() % 8;
+				heapPtr--;
+				registers[param] = stack[heapPtr];
+				stack[heapPtr] = -1;
+				incIP(2);
+			}
+		}
+
+		////////////////////////////////////
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр А
+		   Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 114) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			 //energy -= 10;
+			else {
+				registers[0] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр B
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 115) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[1] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр C
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 116) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[2] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр D
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/		
+		else if (command == 117) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[3] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+	     Помещение значения стека с параметра в регистр E
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 118) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[4] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр F
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 119) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[5] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр G
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 120) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[6] = stack[param];
+			}
+		}
+
+		/*Кадровый просмотр стека
+		  Помещение значения стека с параметра в регистр H
+			Если
+			 Удачно          +2
+			 Пуст            +3
+		*/
+		else if (command == 121) {
+			unsigned short param = getParam() % 8;
+			if (stack[param] == -1)
+				incIP(3);
+			//energy -= 10;
+			else {
+				registers[7] = stack[param];
+			}
+		}
 		
+		////////////////////////////////////
+
+		//Обмен значений стека и параметрового регистра
+		else if (command == 122) {
+			if (heapPtr > 0)
+				std::swap(stack[heapPtr - 1], registers[(getParam() % 8)]);
+		}
+
+		////////////////////////////////////
+
+		//Переход по адресу с верхушки стека
+		//(Если он равен -1, перейти на случайный)
+		else if (command == 123) {
+			if (heapPtr == 0) {
+#pragma warning(push)
+#pragma warning(disable : 4996)
+				srand();
+#pragma warning(pop)
+				IP = getRandomNumber(0, 255);
+			}
+			else {
+				heapPtr--;
+				IP = stack[heapPtr];
+				stack[heapPtr] = -1;
+			}
+		}
+
+		//Запись текущего адреса в стек	
+		//При неудаче       +2
+		else if (command == 124) {
+			if (heapPtr == 8)
+				incIP(2);
+			else {
+				stack[heapPtr] = IP;
+				heapPtr++;
+			}
+		}
+
+		////////////////////////////////////
+		////////////////////////////////////
+
 		//Если не является командой, совершить условный переход
 		else
 			incIP(command);

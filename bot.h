@@ -11,13 +11,13 @@
 class bot {
 public:
 	         int    energy; //Кол-во энергии
-	unsigned short  DNA[DNA_SIZE]; //Геном
+	         short  DNA[DNA_SIZE]; //Геном
 	unsigned int    IP; //Указатель текущей инструкции
 
-	unsigned short  stack[SUB_SIZE]; //Стек
+	         short  stack[SUB_SIZE]; //Стек
 	unsigned short  heapPtr;  //Указатель верхушки стека
 
-	unsigned short  registers[SUB_SIZE]; //Регистры
+	         short  registers[SUB_SIZE]; //Регистры
 
 	unsigned int    coorX;     //Координата X
 	unsigned int    coorY;     //Координата Y
