@@ -1745,3 +1745,12 @@ bot::~bot() {
 	if (chainNext > 0)
 		bots[chainNext].chainPrev = -1;
 }
+
+//Необязательная функция
+//Изменяет один случайный ген у ботов,
+//находящихся на самом верхнем уровне
+void radiation() {
+	for (size_t i = 0; i < WORLD_WIDTH; i++)
+		if (world[i][1] != empty)
+			bots[world[i][1]].DNA[getRandomNumber(0, 255)] = getRandomNumber(0, 255);
+}
