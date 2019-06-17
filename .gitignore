@@ -50,8 +50,8 @@ artifacts/
 *.ilk
 *.meta
 *.obj
-*.ipdb
-*.iobj
+bin/*.ipdb
+bin/*.iobj
 *.pch
 *.pdb
 *.pgc
