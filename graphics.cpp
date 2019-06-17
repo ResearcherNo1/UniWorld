@@ -7,10 +7,10 @@ extern gui::LTexture gSpriteBot;
 extern gui::LTexture gSpriteOrganic;
 extern bool work;
 extern uint_fast64_t lifeCount;
+extern int season;
 
 extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
 extern std::vector<bot> bots;
-extern SDL_Rect gSpriteClips[2];
 
 gui::LTexture::LTexture() {
 	//Initialize
@@ -353,4 +353,10 @@ void gui::updateStats() {
 	lifeCount++;
 	system("cls");
 	printf("Generation step: %lli\n", lifeCount);
+
+	if (!(lifeCount % 1000)) {
+		if (season > 9)
+			season--;
+		else
+			season = 11;
 }

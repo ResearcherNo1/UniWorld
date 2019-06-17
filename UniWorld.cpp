@@ -32,11 +32,10 @@ int _cdecl main(int argc, char* args[]) {
 		for (size_t j = 1; j < WORLD_HEIGHT+1; j++)
 			world[i][j] = empty;
 
-	season = 11;
 
 	bot* a = new bot(MAX_X / 2, std::lround(MAX_Y / ((double)2.0003)));
+	season = 11;
 
-	int az = 1;
 	work = true;
 	while (work) {
 		for (size_t i = 0; i < bots.size(); i++) {
@@ -48,7 +47,6 @@ int _cdecl main(int argc, char* args[]) {
 		
 		gui::updateStats();
 	}
-	az++;
 	gui::close();
 	return 0;
 }
