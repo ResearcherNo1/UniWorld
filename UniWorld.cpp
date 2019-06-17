@@ -48,7 +48,6 @@ int _cdecl main(int argc, char* args[]) {
 		
 		gui::updateStats();
 	}
-
 	gui::close();
 	return 0;
 }
