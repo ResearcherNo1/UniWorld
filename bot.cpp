@@ -86,6 +86,8 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		if (N == bots.size())
 			bots.push_back(*this);
 		else {
+			for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
+				bots[i].n = i;
 			auto a = bots.begin() + N;
 			bots.insert(a, *this);
 			for (size_t i = N; i < bots.size(); i++) //Обновление итераторов
@@ -1731,8 +1733,9 @@ void bot::step() {
 					b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 			}
 		}
+		try {	
 		//Если энергии стало меньше 1
-		else if (energy < 1) {
+		if (energy < 1) {
 			condition = organic_sink; //Отмечаем как органику
 			if (chainPrev != -1)      //Если состоит во многоклеточной цепочке - удаляем
 				bots[chainPrev].chainNext = -1;
@@ -1740,7 +1743,7 @@ void bot::step() {
 				bots[chainNext].chainPrev = -1;
 		}
 
-		try {
+
 			//Если бот глубже, чем MAX_Y / 2, то он начинает накапливать минералы
 			if (this->coorY > (MAX_Y / 2))
 				minrNum++;
@@ -1758,10 +1761,13 @@ void bot::step() {
 }
 
 void bot::death() {
+	for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
+		bots[i].n = i;
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
-	if (!(n == bots.size() - 1))
+
+	if (n != bots.size() - 1)
 		for (size_t i = n; i < bots.size(); i++) //Обновление итераторов
 			bots[i].n = i;
 
