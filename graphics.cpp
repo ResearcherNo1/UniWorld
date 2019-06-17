@@ -359,4 +359,5 @@ void gui::updateStats() {
 			season--;
 		else
 			season = 11;
+	}
 }
