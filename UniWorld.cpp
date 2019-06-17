@@ -34,12 +34,12 @@ int _cdecl main(int argc, char* args[]) {
 
 	season = 11;
 
-	bot a(MAX_X / 2, std::lround(MAX_Y / ((double)2.0003)));
+	bot* a = new bot(MAX_X / 2, std::lround(MAX_Y / ((double)2.0003)));
 
+	int az = 1;
 	work = true;
 	while (work) {
-		size_t alpha = bots.size();
-		for (size_t i = 0; i < alpha; i++) {
+		for (size_t i = 0; i < bots.size(); i++) {
 			bots[i].step();
 			gui::checkEvents();
 		}
@@ -48,6 +48,7 @@ int _cdecl main(int argc, char* args[]) {
 		
 		gui::updateStats();
 	}
+	az++;
 	gui::close();
 	return 0;
 }

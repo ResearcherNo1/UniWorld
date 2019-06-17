@@ -17,14 +17,13 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	if (parent == nullptr) {
 		for (size_t i = 0; i < DNA_SIZE; i++) //Заполняем код командой фотосинтез
 			DNA[i] = 25;
-		energy = 990;
+		energy = 900;
 		minrNum = 0;
 		chainNext = chainPrev = -1;
 		red = green = blue = 170;
+		n = 0;
 	}
 	else {
-		//В одном случае из четырёх
-		if (getRandomNumber(1, 4) == 2) {
 			//Вычисляем указатель мутации
 			size_t mut_ptr = getRandomNumber(0, 248);
 			//Копируем геном родителя
@@ -36,10 +35,6 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 			//Мутируем
 			for (mut_ptr; mut_ptr < abc; mut_ptr++)
 				DNA[mut_ptr] = getRandomNumber(0, 255);
-		}
-		else //Копируем геном родителя
-			for (size_t i = 0; i < DNA_SIZE; i++)
-				DNA[i] = parent->DNA[i];
 
 		energy = (parent->energy) / 2;
 		parent->energy /= 2;
@@ -85,11 +80,16 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	world[X][Y] = N;
 
 	condition = alive;
-	decompose = 0;
 	direct = down;
 
-	bots.push_back(*this);
-
+	if (parent != nullptr) {
+		auto a = bots.begin() + N;
+		bots.insert(a, *this);
+		for (size_t i = N - 1; i < bots.size(); i++) //Обновление итераторов
+			bots[i].n = i;
+	}
+	else
+		bots.push_back(*this);
 }
 
 void bot::incIP(unsigned int num) {
@@ -108,7 +108,7 @@ unsigned short bot::getParam() {
 }
 
 unsigned int bot::getX(unsigned short n) {
-	unsigned int x = coorX;
+	long x = coorX;
 	if (n > 7)
 		n -= 8;
 
@@ -197,14 +197,9 @@ void bot::print(std::string a) {
 }
 
 void bot::step() {
-	//Если бот - органика, разлагаемся
-	if (condition == organic_hold) {
-		if (decompose == 100) {
-			death();
+	//Если бот - органика, выходим
+	if (condition == organic_hold)
 			return;
-		}
-		decompose++;
-	}
 	if (condition == organic_sink) { //Падение органики
 		if (world[coorX][coorY + 1] == empty) {
 			world[coorX][coorY] = empty;
@@ -1739,20 +1734,20 @@ void bot::step() {
 				bots[chainNext].chainPrev = -1;
 		}
 
-#pragma warning(push)
-#pragma warning(disable : 4018)
-		//Если бот глубже, чем MAX_Y / 2, то он начинает накапливать минералы
-		if (coorY > std::lround(MAX_Y / 2))
-			minrNum++;
-		else if (coorY > std::lround(MAX_Y / 2 + MAX_Y / 4))
-			minrNum += 2;
-		else if (coorY > std::lround(MAX_Y - MAX_Y / 10))
-			minrNum += 3;
-#pragma warning(pop)
+		try {
+			//Если бот глубже, чем MAX_Y / 2, то он начинает накапливать минералы
+			if (this->coorY > (MAX_Y / 2))
+				minrNum++;
+			else if (this->coorY > (MAX_Y / 2 + MAX_Y / 4))
+				minrNum += 2;
+			else if (this->coorY > (MAX_Y - MAX_Y / 10))
+				minrNum += 3;
 
-		//Проверка предела
-		if (minrNum > 999)
-			minrNum = 999;
+			//Проверка предела
+			if (minrNum > 999)
+				minrNum = 999;
+		}
+		catch (...) {}
 }
 
 void bot::death() {
