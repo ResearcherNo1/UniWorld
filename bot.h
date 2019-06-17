@@ -12,7 +12,7 @@ class bot {
 public:
 	         int    energy;    //Кол-во энергии
 				int    minrNum;   //Кол-во накопленных минералов
-				
+				short  decompose; //Счётчик разложения
 				cond   condition; //Состояние
 
 				short  DNA[DNA_SIZE];   //Геном

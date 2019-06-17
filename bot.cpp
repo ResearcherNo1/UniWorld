@@ -24,17 +24,16 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		n = 0;
 	}
 	else {
-			//Вычисляем указатель мутации
-			size_t mut_ptr = getRandomNumber(0, 248);
-			//Копируем геном родителя
-			for (size_t i = 0; i < DNA_SIZE; i++)
-				DNA[i] = parent->DNA[i];
+		//Вычисляем указатель мутации
+		size_t mut_ptr = getRandomNumber(0, 239);
+		//Копируем геном родителя
+		for (size_t i = 0; i < DNA_SIZE; i++)
+			DNA[i] = parent->DNA[i];
 
-			const size_t abc = mut_ptr + 4;
-
-			//Мутируем
-			for (mut_ptr; mut_ptr < abc; mut_ptr++)
-				DNA[mut_ptr] = getRandomNumber(0, 255);
+		const size_t abc = mut_ptr + 16;
+		//Мутируем
+		for (mut_ptr; mut_ptr < abc; mut_ptr++)
+			DNA[mut_ptr] = getRandomNumber(0, 255);
 
 		energy = (parent->energy) / 2;
 		parent->energy /= 2;
@@ -80,6 +79,7 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	world[X][Y] = N;
 
 	condition = alive;
+	decompose = 0;
 	direct = down;
 
 	if (parent != nullptr) {
@@ -198,8 +198,12 @@ void bot::print(std::string a) {
 
 void bot::step() {
 	//Если бот - органика, выходим
-	if (condition == organic_hold)
-			return;
+	if (condition == organic_hold) {
+		decompose++;
+		if (decompose >= 50)
+			death();
+		return;
+	}
 	if (condition == organic_sink) { //Падение органики
 		if (world[coorX][coorY + 1] == empty) {
 			world[coorX][coorY] = empty;
