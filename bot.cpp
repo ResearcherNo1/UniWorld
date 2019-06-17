@@ -2,7 +2,7 @@
 //
 #include "bot.h"
 
-extern size_t world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT)];
+extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
 extern std::vector<bot> bots;
 extern int season;
 bot* b;
@@ -12,11 +12,6 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 #pragma warning(disable : 4996)
 	srand();
 #pragma warning(pop)
-
-	std::vector<bot>::iterator a = bots.begin() + N;
-	bots.insert(a, *this);
-	for (size_t i = N; i < bots.size(); i++) //Обновление итераторов
-		bots[i].n = i;
 
 	//Если нет родителей
 	if (parent == nullptr) {
@@ -42,6 +37,9 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 			for (mut_ptr; mut_ptr < abc; mut_ptr++)
 				DNA[mut_ptr] = getRandomNumber(0, 255);
 		}
+		else //Копируем геном родителя
+			for (size_t i = 0; i < DNA_SIZE; i++)
+				DNA[i] = parent->DNA[i];
 
 		energy = (parent->energy) / 2;
 		parent->energy /= 2;
@@ -53,20 +51,26 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		green = parent->green;
 		blue = parent->blue;
 
-#if free == false
-		if (parent->chainNext == -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
-			parent->chainNext = N; //То вставляем туда новорожденного бота
-			chainPrev = parent->n; //У новорожденного ссылка на предыдущего указывает на бота-предка
-			chainNext = -1;        //Ссылка на следующего пуста, новорожденный бот является крайним в цепочке
+		if (free == false) {
+			if (parent->chainNext == -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
+				parent->chainNext = N; //То вставляем туда новорожденного бота
+				chainPrev = parent->n; //У новорожденного ссылка на предыдущего указывает на бота-предка
+				chainNext = -1;        //Ссылка на следующего пуста, новорожденный бот является крайним в цепочке
+			}
+			else //Если у бота-предка ссылка на предыдущего бота в многоклеточной цепочке пуста 
+			{
+				parent->chainPrev = N; // то вставляем туда новорожденного бота
+				chainNext = parent->n; // у новорожденного ссылка на следующего указывает на бота-предка
+				chainPrev = -1;        // ссылка на предыдущего пуста, новорожденный бот является крайним в цепочке 
+			}
 		}
-		else //Если у бота-предка ссылка на предыдущего бота в многоклеточной цепочке пуста 
-		{
-			parent->chainPrev = N; // то вставляем туда новорожденного бота
-			chainNext = parent->n; // у новорожденного ссылка на следующего указывает на бота-предка
-			chainPrev = -1;        // ссылка на предыдущего пуста, новорожденный бот является крайним в цепочке 
+		else {
+			chainPrev = -1;
+			chainNext = -1;
 		}
-#endif
 	}
+
+
 	//Указатель инструкции в самом начале
 	IP = 0;
 
@@ -81,7 +85,11 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	world[X][Y] = N;
 
 	condition = alive;
+	decompose = 0;
 	direct = down;
+
+	bots.push_back(*this);
+
 }
 
 void bot::incIP(unsigned int num) {
@@ -181,11 +189,23 @@ void bot::goBlue(short n) {
 		green = 0;
 }
 
+void bot::print(std::string a) {
+	printf("\t\t %s \n\n", a.c_str());
+	printf("ENERGY - %i   ", energy); printf("MINERALS - %i\n", minrNum);
+	printf("IP - %i   ", IP); printf("Command - %i\n", DNA[IP]);
+	printf("X - %i   ", coorX); printf("Y - %i\n\n", coorY);
+}
+
 void bot::step() {
-	//Если бот - органика, то выходим из функции
-	if (condition = organic_hold)
-		return;
-	if (condition = organic_sink) { //Падение органики
+	//Если бот - органика, разлагаемся
+	if (condition == organic_hold) {
+		if (decompose == 100) {
+			death();
+			return;
+		}
+		decompose++;
+	}
+	if (condition == organic_sink) { //Падение органики
 		if (world[coorX][coorY + 1] == empty) {
 			world[coorX][coorY] = empty;
 			world[coorX][coorY + 1] = n;
@@ -235,7 +255,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = std::lround(season - ((coorY + 1) % 6) + t); //Формула вычисления энергии
+			int hlt = std::lround(season - ((coorY -  1) % 9) + t); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -351,7 +371,7 @@ void bot::step() {
 				incIP(3);
 			}
 			else if (bots[world[x][y]].condition <= organic_sink) { //Если там оказалась органика
-				bots[world[x][y]].~bot(); //Удаляем жертву
+				bots[world[x][y]].death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
 				incIP(4);
@@ -368,7 +388,7 @@ void bot::step() {
 				if (min0 >= min1) {
 					minrNum -= min1;  //Количество минералов у бота уменьшается на количество минералов у жертвы
 													  //Типа, стесал свои зубы о панцирь жертвы)
-					bots[world[x][y]].~bot(); //Удаляем жертву
+					bots[world[x][y]].death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
 					goRed(hl);                //Бот краснеет
 					incIP(5);
@@ -379,7 +399,7 @@ void bot::step() {
 					min1 -= min0; //Но и у обеда они уменьшились
 					//Если энергии в 2 раза больше
 					if (energy >= 2 * min1) {
-						bots[world[x][y]].~bot(); //Удаляем жертву
+						bots[world[x][y]].death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
 						goRed(hl);                //Бот краснеет
 						incIP(5);
@@ -417,7 +437,7 @@ void bot::step() {
 				incIP(3);
 			}
 			else if (bots[world[x][y]].condition <= organic_sink) { //Если там оказалась органика
-				bots[world[x][y]].~bot(); //Удаляем жертву
+				bots[world[x][y]].death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
 				incIP(4);
@@ -434,7 +454,7 @@ void bot::step() {
 				if (min0 >= min1) {
 					minrNum -= min1;  //Количество минералов у бота уменьшается на количество минералов у жертвы
 													  //Типа, стесал свои зубы о панцирь жертвы)
-					bots[world[x][y]].~bot(); //Удаляем жертву
+					bots[world[x][y]].death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
 					goRed(hl);                //Бот краснеет
 					incIP(5);
@@ -445,7 +465,7 @@ void bot::step() {
 					min1 -= min0; //Но и у обеда они уменьшились
 					//Если энергии в 2 раза больше
 					if (energy >= 2 * min1) {
-						bots[world[x][y]].~bot(); //Удаляем жертву
+						bots[world[x][y]].death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
 						goRed(hl);                //Бот краснеет
 						incIP(5);
@@ -1644,6 +1664,8 @@ void bot::step() {
 	//Завершение шага
 	//
 
+	energy -= 4;
+
 		//Если бот в цепочке
 		if (chainNext != -1 && chainPrev != -1) {
 			//Делим минералы
@@ -1686,8 +1708,8 @@ void bot::step() {
 			}
 		}
 
-		//Если энергии больше 999, то плодим нового бота
-		if (energy > 999) {
+		//Если энергии больше 600, то плодим нового бота
+		if (energy > 600) {
 			int a = -1; //Переменная свободного направления
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
@@ -1733,7 +1755,7 @@ void bot::step() {
 			minrNum = 999;
 }
 
-bot::~bot() {
+void bot::death() {
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
