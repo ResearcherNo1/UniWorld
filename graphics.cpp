@@ -6,7 +6,10 @@ extern SDL_Rect gSpriteClips[2];
 extern gui::LTexture gSpriteBot;
 extern gui::LTexture gSpriteOrganic;
 extern bool work;
+extern bool pause;
+extern bool paintMode;
 extern uint_fast64_t lifeCount;
+extern uint_fast64_t EnterlifeCount;
 extern int season;
 
 extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
@@ -151,7 +154,7 @@ gui::LWindow::LWindow() {
 
 bool gui::LWindow::init() {
 	//Create window
-	mWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	mWindow = SDL_CreateWindow("UniWorld", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	if (mWindow != NULL) {
 		mMouseFocus = true;
 		mKeyboardFocus = true;
@@ -202,16 +205,6 @@ void gui::LWindow::handleEvent(SDL_Event& e) {
 			updateCaption = true;
 			break;
 
-			//Window minimized
-		case SDL_WINDOWEVENT_MINIMIZED:
-			mMinimized = true;
-			break;
-
-			//Window maxized
-		case SDL_WINDOWEVENT_MAXIMIZED:
-			mMinimized = false;
-			break;
-
 			//Window restored
 		case SDL_WINDOWEVENT_RESTORED:
 			mMinimized = false;
@@ -246,39 +239,75 @@ bool gui::LWindow::hasKeyboardFocus() {
 	return mKeyboardFocus;
 }
 
-bool gui::LWindow::isMinimized() {
-	return mMinimized;
-}
 
 
 
 void gui::checkEvents() {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
+		//Обработка закрытия
 		if (e.type == SDL_QUIT)
 			work = false;
-		if (e.type == SDL_WINDOWEVENT)
+		//Обработка событий окна
+		else if (e.type == SDL_WINDOWEVENT)
 			gWindow.handleEvent(e);
+		//Обработка нажатий кнопок
+		else if (e.type == SDL_KEYDOWN) {
+			//Обработка выхода через Esc
+			if (e.key.keysym.sym == SDLK_ESCAPE)
+				work = false;
+			//Обработка паузы ("F1")
+			else if (e.key.keysym.sym == SDLK_F1) {
+				pause = !pause;
+				if (pause)
+					SDL_SetWindowTitle(gWindow.mWindow, "UniWorld - Paused");
+				else
+					SDL_SetWindowTitle(gWindow.mWindow, "UniWorld");
+			}
+			//Обработка смены режима ("F2")
+			else if (e.key.keysym.sym == SDLK_F2) {
+				paintMode = !paintMode;
+				if (paintMode)
+					SDL_SetRenderDrawColor(gRenderer, 0xFB, 0xF3, 0xCD, 0xFF);
+				else
+					SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				
+				gui::draw();
+			}
+			//Обработка просчёта шага ("Enter")
+			else if (e.key.keysym.sym == SDLK_KP_ENTER)
+				if (pause)
+					EnterlifeCount = lifeCount + 1;
+
+		}
 	}
 }
 
 void gui::draw() {
 
 	for (size_t i = 0; i < bots.size(); i++) {
+		//Отрисовка живого бота
 		if (bots[i].condition == alive) {
-			gSpriteBot.setColor(bots[i].red, bots[i].green, bots[i].blue);
+			if (paintMode) //Если включён стандартный режим отрисовки
+				gSpriteBot.setColor(bots[i].red, bots[i].green, bots[i].blue);
+			else
+				gSpriteBot.setColor(0xFF, 255 - (bots[i].energy / 4), 0x00);
+
 			gSpriteBot.render((bots[i].coorX * 4), 40 + ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
+		//Отрисовка органики
 		else if (bots[i].condition < organic_sink) {
-			gSpriteBot.setColor(0xFF, 0xFF, 0xFF);
+			if (paintMode)
+				gSpriteOrganic.setColor(0xFF, 0xFF, 0xFF);
+			else
+				gSpriteOrganic.setColor(0xE4, 0x7F, 0xF6);
+
 			gSpriteOrganic.render((bots[i].coorX * 4), 40 + ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
 	}
 
 	//Update screen
 	SDL_RenderPresent(gRenderer);
-
-	gui::checkEvents();
 }
 
 bool gui::initialize() {
@@ -353,6 +382,7 @@ void gui::updateStats() {
 	lifeCount++;
 	system("cls");
 	printf("Generation step: %lli\n", lifeCount);
+	printf("Count of bots: %lli\n", bots.size());
 
 	if (!(lifeCount % 1000)) {
 		if (season > 9)

@@ -82,14 +82,16 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	decompose = 0;
 	direct = down;
 
-	if (parent != nullptr) {
-		auto a = bots.begin() + N;
-		bots.insert(a, *this);
-		for (size_t i = N - 1; i < bots.size(); i++) //Обновление итераторов
-			bots[i].n = i;
-	}
-	else
-		bots.push_back(*this);
+		auto a = bots.begin();
+		if (N == bots.size())
+			bots.push_back(*this);
+		else {
+			auto a = bots.begin() + N;
+			bots.insert(a, *this);
+			for (size_t i = N; i < bots.size(); i++) //Обновление итераторов
+				bots[i].n = i;
+		}
+	
 }
 
 void bot::incIP(unsigned int num) {
@@ -200,7 +202,7 @@ void bot::step() {
 	//Если бот - органика, выходим
 	if (condition == organic_hold) {
 		decompose++;
-		if (decompose >= 50)
+		if (decompose >= DECOMPOSE_TIME)
 			death();
 		return;
 	}
@@ -254,7 +256,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = std::lround(season - ((coorY -  1) % 9) + t); //Формула вычисления энергии
+			int hlt = std::lround(season - ((coorY - 1) % 9) + t); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -637,7 +639,7 @@ void bot::step() {
 		*/
 		else if (command == 34 || command == 44) {
 			unsigned short param;
-			if (IP = 255) {
+			if (IP == 255) {
 				IP = 0;
 				param = (DNA[IP] % 16);
 			}
@@ -1366,7 +1368,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр А равен 0
 		   Если не равен     +2
 		*/
-		else if (command = 104) {
+		else if (command == 104) {
 			if (registers[0] == 0)
 				IP = getParam();
 			else
@@ -1376,7 +1378,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр B равен 0
 		   Если не равен     +2
 		*/
-		else if (command = 105) {
+		else if (command == 105) {
 			if (registers[1] == 0)
 				IP = getParam();
 			else
@@ -1386,7 +1388,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр C равен 0
 			Если не равен     +2
 		*/
-		else if (command = 106) {
+		else if (command == 106) {
 			if (registers[2] == 0)
 				IP = getParam();
 			else
@@ -1396,7 +1398,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр D равен 0
 			Если не равен     +2
 		*/
-		else if (command = 107) {
+		else if (command == 107) {
 			if (registers[3] == 0)
 				IP = getParam();
 			else
@@ -1406,7 +1408,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр E равен 0
 			Если не равен     +2
 		*/
-		else if (command = 108) {
+		else if (command == 108) {
 			if (registers[4] == 0)
 				IP = getParam();
 			else
@@ -1416,7 +1418,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр F равен 0
 			Если не равен     +2
 		*/
-		else if (command = 109) {
+		else if (command == 109) {
 			if (registers[5] == 0)
 				IP = getParam();
 			else
@@ -1426,7 +1428,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр G равен 0
 			Если не равен     +2
 		*/
-		else if (command = 110) {
+		else if (command == 110) {
 			if (registers[6] == 0)
 				IP = getParam();
 			else
@@ -1436,7 +1438,7 @@ void bot::step() {
 		/*Безусловный переход, если регистр H равен 0
 			Если не равен     +2
 		*/
-		else if (command = 111) {
+		else if (command == 111) {
 			if (registers[7] == 0)
 				IP = getParam();
 			else
@@ -1752,14 +1754,16 @@ void bot::step() {
 				minrNum = 999;
 		}
 		catch (...) {}
+
 }
 
 void bot::death() {
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
-	for (size_t i = n; i < bots.size(); i++) //Обновление итераторов
-		bots[i].n = i;
+	if (!(n == bots.size() - 1))
+		for (size_t i = n; i < bots.size(); i++) //Обновление итераторов
+			bots[i].n = i;
 
 	if (chainPrev > 0)           //Если во многоклеточной цепочке - тоже удаляем
 		bots[chainPrev].chainNext = -1;

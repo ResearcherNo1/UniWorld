@@ -4,10 +4,8 @@
 //Using SDL, SDL_image, standard IO, and strings
 #include <SDL.h>
 #include <SDL_image.h>
-#include <stdio.h>
-#include <string>
+#include <conio.h>
 #include <sstream>
-#include <vector>
 #include "constants.h"
 #include "bot.h"
 
@@ -65,12 +63,10 @@ namespace gui {
 		//Window focii
 		bool hasMouseFocus();
 		bool hasKeyboardFocus();
-		bool isMinimized();
 
-	private:
 		//Window data
 		SDL_Window* mWindow;
-
+	private:
 		//Window dimensions
 		int mWidth;
 		int mHeight;
