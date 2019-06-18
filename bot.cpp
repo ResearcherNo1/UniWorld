@@ -107,7 +107,7 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		long i = n - 10;
 		if (i < 0)
 			i = 0;
-		for (i; i < bots.size(); i++) //Обновление итераторов
+		for (long i; i < bots.size(); i++) //Обновление итераторов
 			bots[i].n = i;
 	}
 }
@@ -274,7 +274,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = std::lround(season - ((coorY - 1) % 9) + t); //Формула вычисления энергии
+			int hlt = std::lround(((season * 9) - coorY) / (2 - t)); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
