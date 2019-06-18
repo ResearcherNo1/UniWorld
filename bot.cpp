@@ -103,7 +103,11 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 			n = N;
 			bots.insert(a, *this);
 		}
-		for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
+
+		long i = n - 10;
+		if (i < 0)
+			i = 0;
+		for (i; i < bots.size(); i++) //Обновление итераторов
 			bots[i].n = i;
 	}
 }

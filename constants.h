@@ -23,7 +23,7 @@ constexpr double HEIGHT_COEF = WORLD_HEIGHT / DNA_SIZE;
 constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
 constexpr auto FREE = true;
 constexpr auto CHAIN = false;
-constexpr auto DECOMPOSE_TIME = 150;
+constexpr auto DECOMPOSE_TIME = 100;
 
 
 //Navigation constants
