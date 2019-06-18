@@ -82,18 +82,26 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	decompose = 0;
 	direct = down;
 
-		auto a = bots.begin();
-		if (N == bots.size())
-			bots.push_back(*this);
-		else {
-			for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
-				bots[i].n = i;
-			auto a = bots.begin() + N;
+	auto a = bots.begin(); //Итератор для вставки
+	//Если нет родителей - вставляем в конец вектора
+	if (parent == nullptr) 
+		bots.push_back(*this);
+	else {
+		//Если N больше размера вектора - вставляем на место родителя
+		if (N >= bots.size()) {
+			n = parent->n;
+			a = bots.begin() + n;
 			bots.insert(a, *this);
-			for (size_t i = N; i < bots.size(); i++) //Обновление итераторов
-				bots[i].n = i;
 		}
-	
+		//В лучшем случае - используем непосредственно N
+		else {
+			a = bots.begin() + N;
+			n = N;
+			bots.insert(a, *this);
+		}
+		for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
+			bots[i].n = i;
+	}
 }
 
 void bot::incIP(unsigned int num) {
@@ -1763,6 +1771,7 @@ void bot::step() {
 void bot::death() {
 	for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
 		bots[i].n = i;
+
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
