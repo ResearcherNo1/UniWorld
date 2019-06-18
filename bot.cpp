@@ -25,15 +25,19 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	}
 	else {
 		//Вычисляем указатель мутации
-		size_t mut_ptr = getRandomNumber(0, 239);
+		size_t mutPtr = getRandomNumber(0, 255);
 		//Копируем геном родителя
 		for (size_t i = 0; i < DNA_SIZE; i++)
 			DNA[i] = parent->DNA[i];
 
-		const size_t abc = mut_ptr + 16;
 		//Мутируем
-		for (mut_ptr; mut_ptr < abc; mut_ptr++)
-			DNA[mut_ptr] = getRandomNumber(0, 255);
+		for (short i = 0; i < 16; i++) {
+			DNA[mutPtr] = getRandomNumber(0, 255);
+			mutPtr++;
+			if (mutPtr > DNA_MAX_INDEX)
+				mutPtr -= DNA_SIZE;
+		}
+
 
 		energy = (parent->energy) / 2;
 		parent->energy /= 2;
