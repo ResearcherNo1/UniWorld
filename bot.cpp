@@ -1777,16 +1777,22 @@ void bot::step() {
 }
 
 void bot::death() {
-	for (size_t i = 0; i < bots.size(); i++) //Обновление итераторов
-		bots[i].n = i;
+	//Если n выходит за пределы вектора
+	if (n >= bots.size())
+		//Вычисляем итератор через адрес
+		//С++03 гарантирует непрерывное хранение элементов в памяти вектора
+		//В долгосрочной перспективе работать не будет, но для функции удаления сойдёт
+		n = this - &bots[0];
 
 	world[coorX][coorY] = empty; //Удаление бота с карты
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
 
-	if (n != bots.size() - 1)
-		for (size_t i = n; i < bots.size(); i++) //Обновление итераторов
-			bots[i].n = i;
+	long s = n - 10;
+	if (s < 0)
+		s = 0;
+	for (s; s < bots.size(); s++) //Обновление итераторов
+		bots[s].n = s;
 
 	if (chainPrev > 0)           //Если во многоклеточной цепочке - тоже удаляем
 		bots[chainPrev].chainNext = -1;
