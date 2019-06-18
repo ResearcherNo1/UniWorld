@@ -5,7 +5,7 @@
 #include <Windows.h>
 
 long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT+2)]; //Массив мира
-std::vector<bot> bots;	//Вектор ботов
+std::pmr::vector<bot> bots;	//Вектор ботов
 int season; //9 - зима; 10 - весна, осень; 11 - лето
 bool work;
 bool pause;

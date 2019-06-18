@@ -3,7 +3,7 @@
 #include "bot.h"
 
 extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
-extern std::vector<bot> bots;
+extern std::pmr::vector<bot> bots;
 extern int season;
 bot* b;
 
@@ -107,8 +107,10 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		long i = n - 10;
 		if (i < 0)
 			i = 0;
-		for (long i; i < bots.size(); i++) //Обновление итераторов
+		for (i; i < bots.size(); i++) {//Обновление итераторов
 			bots[i].n = i;
+			world[bots[i].coorX][bots[i].coorY] = i;
+		}
 	}
 }
 
@@ -274,7 +276,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = std::lround(((season * 9) - coorY) / (2 - t)); //Формула вычисления энергии
+			int hlt = std::lround(((season * 10) - coorY) / (3 - t)); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -1727,8 +1729,8 @@ void bot::step() {
 			}
 		}
 
-		//Если энергии больше 600, то плодим нового бота
-		if (energy > 600) {
+		//Если энергии больше 900, то плодим нового бота
+		if (energy > 900) {
 			int a = -1; //Переменная свободного направления
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
@@ -1788,11 +1790,13 @@ void bot::death() {
 	auto a = bots.begin() + n;   //Из вектора
 	bots.erase(a);               //
 
-	long s = n - 10;
-	if (s < 0)
-		s = 0;
-	for (s; s < bots.size(); s++) //Обновление итераторов
-		bots[s].n = s;
+	long i = n - 10;
+	if (i < 0)
+		i = 0;
+	for (i; i < bots.size(); i++) { //Обновление итераторов
+		bots[i].n = i;
+		world[bots[i].coorX][bots[i].coorY] = i;
+	}
 
 	if (chainPrev > 0)           //Если во многоклеточной цепочке - тоже удаляем
 		bots[chainPrev].chainNext = -1;

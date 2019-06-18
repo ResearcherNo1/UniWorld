@@ -8,7 +8,7 @@ extern uint_fast64_t EnterlifeCount;
 extern int season;
 
 extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
-extern std::vector<bot> bots;
+extern std::pmr::vector<bot> bots;
 
 void gInit() {
 	gui::initialize();
