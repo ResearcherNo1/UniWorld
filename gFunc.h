@@ -7,6 +7,6 @@
 
 void gInit();
 
-void gStep();
+bool gStep();
 
 #endif /* GFUNC_H */

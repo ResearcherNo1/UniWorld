@@ -284,6 +284,7 @@ void gui::checkEvents() {
 }
 
 void gui::draw() {
+	SDL_RenderClear(gRenderer);
 
 	for (size_t i = 0; i < bots.size(); i++) {
 		//Отрисовка живого бота
@@ -293,7 +294,7 @@ void gui::draw() {
 			else
 				gSpriteBot.setColor(0xFF, 255 - (bots[i].energy / 4), 0x00);
 
-			gSpriteBot.render((bots[i].coorX * 4), 40 + ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
+			gSpriteBot.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
 		//Отрисовка органики
 		else if (bots[i].condition < organic_sink) {
@@ -302,7 +303,7 @@ void gui::draw() {
 			else
 				gSpriteOrganic.setColor(0xE4, 0x7F, 0xF6);
 
-			gSpriteOrganic.render((bots[i].coorX * 4), 40 + ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
+			gSpriteOrganic.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
 	}
 

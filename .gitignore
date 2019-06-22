@@ -261,3 +261,4 @@ paket-files/
 __pycache__/
 *.pyc
 /bin/UniWorld.exe.lastcodeanalysissucceeded
+/enc_temp_folder

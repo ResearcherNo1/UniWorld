@@ -7,9 +7,9 @@
 
 //Global constants
 constexpr auto SCREEN_WIDTH  = 1280;
-constexpr auto SCREEN_HEIGHT = 760;
+constexpr auto SCREEN_HEIGHT = 720;
 constexpr auto WORLD_WIDTH = SCREEN_WIDTH / 4;
-constexpr double WORLD_HEIGHT = (SCREEN_HEIGHT - 40) / 4;
+constexpr double WORLD_HEIGHT = SCREEN_HEIGHT / 4;
 constexpr auto BOTS_MAX = WORLD_WIDTH * WORLD_HEIGHT;
 
 //Bot constants
@@ -23,7 +23,7 @@ constexpr double HEIGHT_COEF = WORLD_HEIGHT / DNA_SIZE;
 constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
 constexpr auto FREE = true;
 constexpr auto CHAIN = false;
-constexpr auto DECOMPOSE_TIME = 10;
+constexpr auto DECOMPOSE_TIME = 25;
 
 
 //Navigation constants

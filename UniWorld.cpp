@@ -37,6 +37,7 @@ int _cdecl main(int argc, char* args[]) {
 			Sleep(100);
 		}
 	}
+
 	gui::close();
 	return 0;
 }
