@@ -19,7 +19,7 @@ void gInit() {
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		world[i][0] = wall;
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
-		world[i][181] = wall;
+		world[i][((unsigned long long(WORLD_HEIGHT + 1))] = wall;
 
 	//Отмечаем пустоту
 	for (size_t i = 0; i < WORLD_WIDTH; i++)

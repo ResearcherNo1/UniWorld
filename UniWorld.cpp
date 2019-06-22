@@ -1,4 +1,7 @@
-﻿#include "constants.h"
+﻿//Точка входа
+//
+
+#include "constants.h"
 #include "bot.h"
 #include "graphics.h"
 #include "gFunc.h"
@@ -13,7 +16,7 @@ uint_fast64_t lifeCount = 0; //Счётчик ходов
 uint_fast64_t EnterlifeCount = 0;
 bool paintMode; //Режим отображения
 
-gui::LWindow gWindow;; //The window we'll be rendering to
+gui::LWindow gWindow; //The window we'll be rendering to
 SDL_Renderer* gRenderer = NULL; //The window renderer
 
 //Scene sprites

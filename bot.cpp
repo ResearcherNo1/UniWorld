@@ -22,6 +22,7 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		chainNext = chainPrev = -1;
 		red = green = blue = 170;
 		n = 0;
+		born = 400;
 	}
 	else {
 		//Вычисляем указатель мутации
@@ -31,13 +32,17 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 			DNA[i] = parent->DNA[i];
 
 		//Мутируем
-		for (short i = 0; i < 16; i++) {
+		for (short i = 0; i < MUT_COEF; i++) {
 			DNA[mutPtr] = getRandomNumber(0, 255);
 			mutPtr++;
 			if (mutPtr > DNA_MAX_INDEX)
 				mutPtr -= DNA_SIZE;
 		}
 
+		//Вычисляем порог рождаемости
+		for (size_t i = 0; i < DNA_SIZE; i++)
+			born += DNA[i];
+		born /= 16;
 
 		energy = (parent->energy) / 2;
 		parent->energy /= 2;
@@ -1729,8 +1734,8 @@ void bot::step() {
 			}
 		}
 
-		//Если энергии больше 900, то плодим нового бота
-		if (energy > 900) {
+		//Если энергии больше критического порога, то плодим нового бота
+		if (energy > born) {
 			int a = -1; //Переменная свободного направления
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);

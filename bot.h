@@ -35,6 +35,7 @@ public:
 	         short  green;     //Кол-во зелёного
 	         short  blue;      //       синего
 
+				int    born = 0;      //Критический порог энергии для рождения потомка
 
 	bot(unsigned int X, unsigned int Y, bot* parent = nullptr, size_t N = 0, bool free = true);
 	void death(); //Процедура смерти

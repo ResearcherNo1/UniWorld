@@ -1,3 +1,5 @@
+//Файл реализации глобальных функций
+//
 #include "constants.h"
 #include "bot.h"
 #include "graphics.h"
