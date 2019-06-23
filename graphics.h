@@ -54,6 +54,9 @@ namespace gui {
 
 		//Handles window events
 		void handleEvent(SDL_Event& e);
+		
+		//Переименование окна
+		void rename(std::string _new);
 
 		//Deallocates internals
 		void free();
@@ -85,6 +88,7 @@ namespace gui {
 	void close();
 	void updateStats();
 
+	
 } /* ::gui */
 
 #endif /* GRAPHICS_H */

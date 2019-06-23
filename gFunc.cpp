@@ -32,9 +32,7 @@ void gInit() {
 	paintMode = true;
 }
 
-bool gStep() {
-	if (bots.size() == 0)
-		return false;
+void gStep() {
 	for (size_t i = 0; i < bots.size(); i++) {
 		bots[i].step();
 		gui::checkEvents();
@@ -43,5 +41,4 @@ bool gStep() {
 	gui::draw();
 
 	gui::updateStats();
-	return true;
 }

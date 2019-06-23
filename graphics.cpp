@@ -212,6 +212,10 @@ void gui::LWindow::handleEvent(SDL_Event& e) {
 		}
 }
 
+void gui::LWindow::rename(std::string _new) {
+	SDL_SetWindowTitle(mWindow, _new.c_str());
+}
+
 void gui::LWindow::free() {
 	if (mWindow != NULL) {
 		SDL_DestroyWindow(mWindow);
