@@ -18,6 +18,10 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 	srand();
 #pragma warning(pop)
 
+	auto handler = std::signal(SIGABRT, signal_handler);
+	if (handler == SIG_ERR)
+		std::cerr << "Signal setup failed\n";
+
 	//Если нет родителей
 	if (parent == nullptr) {
 		for (size_t i = 0; i < DNA_SIZE; i++) //Заполняем код командой фотосинтез
@@ -84,6 +88,8 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 	}
 	heapPtr = 0;
 
+	assert(coorX >= 0 && coorX < WORLD_WIDTH);
+	assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
 	coorX = X; coorY = Y;
 
 	condition = alive;
@@ -129,14 +135,9 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 			else if (y == WORLD_HEIGHT + 2)
 				y = 131;
 
-			auto handler = std::signal(SIGABRT, signal_handler);
-			if (handler == SIG_ERR)
-				std::cerr << "Signal setup failed\n";
-			else {
 				assert(x >= 0 && x < WORLD_WIDTH);
 				assert(y > 0 && y <= WORLD_HEIGHT + 1);
 				world[bots[i].coorX][bots[i].coorY] = i;
-			}
 		}
 	}
 }
@@ -176,7 +177,7 @@ unsigned int bot::getX(unsigned short n) {
 }
 
 unsigned int bot::getY(unsigned short n) {
-	unsigned int y = coorY;
+	int y = coorY;
 	if (n > 7)
 		n -= 8;
 
@@ -185,6 +186,10 @@ unsigned int bot::getY(unsigned short n) {
 	else if (n == 4 || n == 5 || n == 6)
 		y++;
 
+	if (y > MAX_Y)
+		y = MAX_Y;
+	else if (y < 0)
+		y = 0;
 	return y;
 }
 
@@ -855,7 +860,7 @@ void bot::step() {
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
-				if (world[x][y] == empty) {
+				if (world[x][y] == empty && y > 0 && y < WORLD_HEIGHT - 1) {
 					a = i;
 					break;
 				}
@@ -967,7 +972,7 @@ void bot::step() {
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
-				if (world[x][y] == empty) {
+				if (world[x][y] == empty && y > 0 && y < WORLD_HEIGHT - 1) {
 					a = i;
 					break;
 				}
@@ -981,7 +986,7 @@ void bot::step() {
 				delete b;
 
 			incIP(1);
-			if (chainNext != -1 && chainPrev != -1)
+			if (chainNext > -1 && chainPrev > -1)
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
 			else
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
@@ -1806,7 +1811,7 @@ void bot::step() {
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
-				if (world[x][y] == empty || world[x][y] == wall) {
+				if (world[x][y] == empty && y > 0 && y < WORLD_HEIGHT - 1) {
 					a = i;
 					break;
 				}
@@ -1816,7 +1821,7 @@ void bot::step() {
 			else {
 				if (b != nullptr)
 					delete b;
-				if (chainNext == -1 && chainPrev == -1)
+				if (chainNext < -1 && chainPrev < -1)
 					b = new bot(getX(a), getY(a), this, n + 1, FREE);
 				else
 					b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
