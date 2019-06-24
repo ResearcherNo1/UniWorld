@@ -35,7 +35,7 @@ void gInit() {
 
 void gStep() {
 	bool showPercent = false;
-	if (pause && bots.size() >= 1000)
+	if (pause && bots.size() >= 100)
 		showPercent = true;
 
 	for (long double i = 0; i < bots.size(); i++) {

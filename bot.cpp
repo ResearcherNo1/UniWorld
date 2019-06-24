@@ -130,14 +130,15 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 			bots[i].n = i;
 			int x = bots[i].coorX;
 			int y = bots[i].coorY;
-			if (y == 0)
-				y = 1;
-			else if (y == WORLD_HEIGHT + 2)
-				y = 131;
 
-				assert(x >= 0 && x < WORLD_WIDTH);
-				assert(y > 0 && y <= WORLD_HEIGHT + 1);
-				world[bots[i].coorX][bots[i].coorY] = i;
+			assert(x >= 0 && x < WORLD_WIDTH);
+			assert(y > 0 && y <= WORLD_HEIGHT + 1);
+			world[bots[i].coorX][bots[i].coorY] = i;
+
+			if (bots[i].chainPrev > n)
+				bots[i].chainPrev -= 1;
+			if (bots[i].chainNext > n)
+				bots[i].chainNext -= 1;
 		}
 	}
 }
@@ -1892,7 +1893,11 @@ void bot::death() {
 		int y = bots[i].coorY;
 		assert(x >= 0 && x < WORLD_WIDTH);
 		assert(y > 0 && y <= WORLD_HEIGHT + 1);
-		world[bots[i].coorX][bots[i].coorY] = i;
+		world[x][y] = i;
+		if (bots[i].chainPrev > n)
+			bots[i].chainPrev -= 1;
+		if (bots[i].chainNext > n)
+			bots[i].chainNext -= 1;
 	}
 
 	if (chainPrev > -1) //≈сли во многоклеточной цепочке - тоже удал€ем
