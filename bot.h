@@ -28,7 +28,7 @@ public:
 	         short  registers[SUB_SIZE]; //Регистры
 
 				int    coorX = 0;			  //Координата X
-				int    coorY = 0;			  //Координата Y
+				int    coorY = 1;			  //Координата Y
 				drct   direct = drct::up; //Текущее направление
 
 	 	 long long   chainPrev = -1; //Cсылка на предыдущего бота в цепочке

@@ -114,7 +114,7 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 
 		world[X][Y] = n;
 
-		unsigned long i = n;
+		size_t i = n;
 		if (i == 0)
 			i = 0;
 		else
@@ -124,6 +124,10 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 			bots[i].n = i;
 			int x = bots[i].coorX;
 			int y = bots[i].coorY;
+			if (y == 0)
+				y = 1;
+			else if (y == WORLD_HEIGHT + 2)
+				y = 131;
 
 			auto handler = std::signal(SIGABRT, signal_handler);
 			if (handler == SIG_ERR)
@@ -334,7 +338,8 @@ void bot::step() {
 				unsigned int x = getX(param + direct); //Получаем координаты клетки
 				unsigned int y = getY(param + direct); //
 
-				assert(world[x][y] < bots.size());
+				long long size = static_cast<long long>(bots.size());
+				assert(world[x][y] < size);
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -378,7 +383,8 @@ void bot::step() {
 				unsigned int x = getX(param); //Получаем координаты клетки
 				unsigned int y = getY(param); //
 
-				assert(world[x][y] < bots.size());
+				long long size = static_cast<long long>(bots.size());
+				assert(world[x][y] < size);
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -418,7 +424,8 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -485,7 +492,8 @@ void bot::step() {
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -551,9 +559,10 @@ void bot::step() {
 
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
-			size_t wc = world[x][y]; //Определяем объект
+			long long wc = world[x][y]; //Определяем объект
 
-			assert(wc < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(wc < size);
 
 			if (wc == empty) { //Если пусто
 				incIP(2);
@@ -585,9 +594,10 @@ void bot::step() {
 
 			unsigned int x = getX(param); //Вычисляем координаты клетки
 			unsigned int y = getY(param); //
-			size_t wc = world[x][y]; //Определяем объект
+			long long wc = world[x][y]; //Определяем объект
 
-			assert(wc < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(wc < size);
 
 			if (wc == empty) { //Если пусто
 				incIP(2);
@@ -619,7 +629,8 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -662,7 +673,8 @@ void bot::step() {
 			unsigned int x = getX(param); //Вычисляем координаты клетки
 			unsigned int y = getY(param); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -711,7 +723,8 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -745,7 +758,8 @@ void bot::step() {
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
 
-			assert(world[x][y] < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(world[x][y] < size);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -855,7 +869,7 @@ void bot::step() {
 				delete b;
 
 			incIP(1);
-			if (chainNext != -1 && chainPrev != -1)
+			if (chainNext > -1 && chainPrev > -1)
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 			else
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
@@ -1736,8 +1750,9 @@ void bot::step() {
 	
 		//Если бот в цепочке
 		if (chainNext > -1 && chainPrev > -1) {
-			assert(chainNext < bots.size());
-			assert(chainPrev < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(chainNext < size);
+			assert(chainPrev < size);
 
 			//Делим минералы
 			unsigned int min = minrNum + bots[chainNext].minrNum + bots[chainPrev].minrNum;
@@ -1752,9 +1767,6 @@ void bot::step() {
 			//Связано это с тем, что в крайних ботах в цепочке должно быть больше энергии
 			//Чтобы они плодили новых ботов и удлиняли цепочку
 			if ((bots[chainNext].chainNext > -1 || bots[chainNext].chainPrev > -1) && (bots[chainPrev].chainNext > -1 || bots[chainPrev].chainPrev > -1)) {
-				assert(chainNext < bots.size());
-				assert(chainPrev < bots.size());
-
 				unsigned int hlt = (energy + bots[chainNext].energy + bots[chainPrev].energy);
 				energy = (min / 3) + (min % 3);
 				bots[chainNext].energy = hlt;
@@ -1763,7 +1775,8 @@ void bot::step() {
 		}
 		//Если бот имеет предыдущего в цепочке
 		else if (chainPrev > -1) { 
-			assert(chainPrev < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(chainPrev < size);
 
 			//Если предыдущий не является крайним в цепочке
 			if (bots[chainPrev].chainNext > -1 && bots[chainPrev].chainPrev > -1) {
@@ -1775,7 +1788,8 @@ void bot::step() {
 		}
 		//Если бот имеет следущего в цепочке
 		else if (chainNext > -1) { 
-			assert(chainNext < bots.size());
+			long long size = static_cast<long long>(bots.size());
+			assert(chainNext < size);
 
 			//Если предыдущий не является крайним в цепочке
 			if (bots[chainNext].chainNext > -1 && bots[chainNext].chainPrev > -1) {
@@ -1813,13 +1827,14 @@ void bot::step() {
 			if (energy < 1) {
 				condition = organic_sink; //Отмечаем как органику
 
+				long long size = static_cast<long long>(bots.size());
 				//Если состоит во многоклеточной цепочке - удаляем
 				if (chainPrev > -1) {
-					assert(chainPrev < bots.size());
+					assert(chainPrev < size);
 					bots[chainPrev].chainNext = -1;
 				}
 				if (chainNext > -1) {
-					assert(chainNext < bots.size());
+					assert(chainNext < size);
 					bots[chainNext].chainPrev = -1;
 				}
 			}
@@ -1860,7 +1875,7 @@ void bot::death() {
 	auto a = bots.begin() + n; //Из вектора
 	bots.erase(a);             //
 
-	unsigned long i = n;
+	size_t i = n;
 	if (i == 0)
 		i = 0;
 	else

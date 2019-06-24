@@ -29,14 +29,15 @@ constexpr auto MUT_COEF = 32;
 
 //Navigation constants
 constexpr auto empty = -1;
-constexpr long wall = BOTS_MAX + 10000;
+constexpr long wall = static_cast<long>(BOTS_MAX + 10000);
 constexpr auto MAX_X = WORLD_WIDTH - 1;
 constexpr auto MAX_Y = WORLD_HEIGHT - 1;
 
 #define srand(); 	/* Получить текущее время для генерации рандомайза.*/ /* ! Лучше делать с миллисекундами */ struct tm *st; const time_t timer = time(NULL); st = localtime(&timer); /* Перевод времени в секунды */ int rnd_seed = 3600 * st->tm_hour + 60 * st->tm_min + st->tm_sec; srand(rnd_seed);
 
 //Функция выбора случайного числа в выбраном диапазоне
-inline int getRandomNumber(int min, int max) {
+template <class T>
+inline T getRandomNumber(T min, T max) {
 	//Перед запуском вызвать srand();
 
 	if (min < 0) //Создание исключения при маленьком минимальном числе
@@ -51,9 +52,15 @@ inline int getRandomNumber(int min, int max) {
 		system("exit");
 	}
 
-	static const double fraction = 1.0 / (static_cast<double>(RAND_MAX) + 1.0);
+	if (min >= max)
+	{
+		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():Максимальный порог диапазона равен или больше минимального" << std::endl;
+		system("exit");
+	}
+
+	static const long double fraction = 1.0 / (static_cast<long double>(RAND_MAX) + 1.0);
 	//Равномерно распределяем рандомное число в нашем диапазоне
-	return static_cast<int>(rand() * fraction * (max - min + 1) + min);
+	return static_cast<T>(rand() * fraction * (max - min + 1) + min);
 }
 
 #endif //CONSTANTS_H
