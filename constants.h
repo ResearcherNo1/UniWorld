@@ -31,7 +31,7 @@ constexpr auto MUT_COEF = 32;
 constexpr auto empty = -1;
 constexpr long wall = static_cast<long>(BOTS_MAX + 10000);
 constexpr auto MAX_X = WORLD_WIDTH - 1;
-constexpr auto MAX_Y = WORLD_HEIGHT + 1;
+constexpr auto MAX_Y = static_cast<int>(WORLD_HEIGHT + 1);
 
 #define srand(); 	/* Получить текущее время для генерации рандомайза.*/ /* ! Лучше делать с миллисекундами */ struct tm *st; const time_t timer = time(NULL); st = localtime(&timer); /* Перевод времени в секунды */ int rnd_seed = 3600 * st->tm_hour + 60 * st->tm_min + st->tm_sec; srand(rnd_seed);
 

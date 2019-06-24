@@ -135,9 +135,10 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 			assert(y > 0 && y <= WORLD_HEIGHT + 1);
 			world[bots[i].coorX][bots[i].coorY] = i;
 
-			if (bots[i].chainPrev > n)
+			long long nLong = static_cast<long long>(n);
+			if (bots[i].chainPrev > nLong)
 				bots[i].chainPrev -= 1;
-			if (bots[i].chainNext > n)
+			if (bots[i].chainNext > nLong)
 				bots[i].chainNext -= 1;
 		}
 	}
@@ -1806,9 +1807,10 @@ void bot::step() {
 			}
 		}
 
+		bool _born = false;
+		int a = -1; //Переменная свободного направления
 		//Если энергии больше критического порога, то плодим нового бота
 		if (energy > born) {
-			int a = -1; //Переменная свободного направления
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
@@ -1819,18 +1821,11 @@ void bot::step() {
 			}
 			if (a == -1) //Если нет свободного места
 				energy = 0; //Бот погибает
-			else {
-				if (b != nullptr)
-					delete b;
-				if (chainNext < -1 && chainPrev < -1)
-					b = new bot(getX(a), getY(a), this, n + 1, FREE);
-				else
-					b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
-			}
+			else
+				_born = true;
 		}
-		try {	
 			//Если энергии стало меньше 1
-			if (energy < 1) {
+			if (energy < 1 || (_born && (energy / 2) < 1)) {
 				condition = organic_sink; //Отмечаем как органику
 
 				long long size = static_cast<long long>(bots.size());
@@ -1857,9 +1852,16 @@ void bot::step() {
 			//Проверка предела
 			if (minrNum > 999)
 				minrNum = 999;
-		}
-		catch (...) {}
 
+			if (_born) {
+				born += std::lround(born * 0.25);
+				if (b != nullptr)
+					delete b;
+				if (chainNext < -1 && chainPrev < -1)
+					b = new bot(getX(a), getY(a), this, n + 1, FREE);
+				else
+					b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+			}
 }
 
 void bot::death() {
@@ -1894,9 +1896,11 @@ void bot::death() {
 		assert(x >= 0 && x < WORLD_WIDTH);
 		assert(y > 0 && y <= WORLD_HEIGHT + 1);
 		world[x][y] = i;
-		if (bots[i].chainPrev > n)
+
+		long long nLong = static_cast<long long>(n);
+		if (bots[i].chainPrev > nLong)
 			bots[i].chainPrev -= 1;
-		if (bots[i].chainNext > n)
+		if (bots[i].chainNext > nLong)
 			bots[i].chainNext -= 1;
 	}
 
