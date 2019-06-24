@@ -6,6 +6,7 @@ extern bool paintMode;
 extern uint_fast64_t lifeCount;
 extern uint_fast64_t EnterlifeCount;
 extern int season;
+extern gui::LWindow gWindow;
 
 extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
 extern std::pmr::vector<bot> bots;
@@ -19,7 +20,7 @@ void gInit() {
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		world[i][0] = wall;
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
-		world[i][((unsigned long long(WORLD_HEIGHT + 1))] = wall;
+		world[i][((unsigned long long(WORLD_HEIGHT + 1)))] = wall;
 
 	//Отмечаем пустоту
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
@@ -33,9 +34,19 @@ void gInit() {
 }
 
 void gStep() {
-	for (size_t i = 0; i < bots.size(); i++) {
+	bool showPercent = false;
+	if (pause && bots.size() >= 1000)
+		showPercent = true;
+
+	for (long double i = 0; i < bots.size(); i++) {
 		bots[i].step();
 		gui::checkEvents();
+		if (showPercent) {
+			double percent = (i / bots.size()) * ((double)100);
+			char buffer[27];
+			sprintf_s(buffer, 27, "UniWorld - Paused (%.1f%%)", percent);
+			gWindow.rename(buffer);
+		}
 	}
 	radiation();
 	gui::draw();

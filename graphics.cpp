@@ -1,7 +1,7 @@
 #include "graphics.h"
 
 extern SDL_Renderer* gRenderer;
-extern gui::LWindow gWindow;;
+extern gui::LWindow gWindow;
 extern SDL_Rect gSpriteClips[2];
 extern gui::LTexture gSpriteBot;
 extern gui::LTexture gSpriteOrganic;
@@ -313,6 +313,11 @@ void gui::draw() {
 
 	//Update screen
 	SDL_RenderPresent(gRenderer);
+
+	if (pause)
+		gWindow.rename("UniWorld - Paused");
+	else
+		gWindow.rename("UniWorld");
 }
 
 bool gui::initialize() {

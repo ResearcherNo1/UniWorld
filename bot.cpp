@@ -813,12 +813,12 @@ void bot::step() {
 			if (b != nullptr)
 				delete b;
 
+			incIP(1);
 			if (chainNext != -1 && chainPrev != -1)
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 			else
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
 
-			incIP(1);
 			break;
 		}
 
@@ -925,12 +925,12 @@ void bot::step() {
 			if (b != nullptr)
 				delete b;
 
+			incIP(1);
 			if (chainNext != -1 && chainPrev != -1)
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
 			else
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 
-			incIP(1);
 			break;
 		}
 
@@ -1693,7 +1693,7 @@ void bot::step() {
 	energy -= 4;
 
 		//Если бот в цепочке
-		if (chainNext != -1 && chainPrev != -1) {
+		if (chainNext > -1 && chainPrev > -1) {
 			//Делим минералы
 			unsigned int min = minrNum + bots[chainNext].minrNum + bots[chainPrev].minrNum;
 			minrNum = (min / 3) + (min % 3);
@@ -1706,7 +1706,7 @@ void bot::step() {
 			//Если они не являются крайними, то распределяем энергию поровну
 			//Связано это с тем, что в крайних ботах в цепочке должно быть больше энергии
 			//Чтобы они плодили новых ботов и удлиняли цепочку
-			if ((bots[chainNext].chainNext != -1 || bots[chainNext].chainPrev != -1) && (bots[chainPrev].chainNext != -1 || bots[chainPrev].chainPrev != -1)) {
+			if ((bots[chainNext].chainNext > -1 || bots[chainNext].chainPrev > -1) && (bots[chainPrev].chainNext > -1 || bots[chainPrev].chainPrev > -1)) {
 				unsigned int hlt = (energy + bots[chainNext].energy + bots[chainPrev].energy);
 				energy = (min / 3) + (min % 3);
 				bots[chainNext].energy = hlt;
@@ -1714,19 +1714,19 @@ void bot::step() {
 			}
 		}
 		//Если бот имеет предыдущего в цепочке
-		else if (chainPrev != -1) { 
+		else if (chainPrev > -1) { 
 			//Если предыдущий не является крайним в цепочке
-			if (bots[chainPrev].chainNext != -1 && bots[chainPrev].chainPrev != -1) {
+			if (bots[chainPrev].chainNext > -1 && bots[chainPrev].chainPrev > -1) {
 				//То распределяем энергию в пользу текущёго бота
 				unsigned int hlt = energy + bots[chainPrev].energy;
 				bots[chainPrev].energy = (hlt / 4) + (hlt % 4);
 				energy = hlt / 4 * 3;
 			}
 		}
-		//Если бот имеет предыдущего в цепочке
-		else if (chainNext != -1) { 
+		//Если бот имеет следущего в цепочке
+		else if (chainNext > -1) { 
 			//Если предыдущий не является крайним в цепочке
-			if (bots[chainNext].chainNext != -1 && bots[chainNext].chainPrev != -1) {
+			if (bots[chainNext].chainNext > -1 && bots[chainNext].chainPrev > -1) {
 				//То распределяем энергию в пользу текущёго бота
 				unsigned int hlt = energy + bots[chainNext].energy;
 				bots[chainNext].energy = (hlt / 4) + (hlt % 4);
