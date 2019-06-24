@@ -1,0 +1,19 @@
+language: cpp
+dist: xenial
+compiler: gcc
+
+before_install:
+  # Codecov
+  - sudo pip install codecov
+
+script: 
+  - qmake
+  - make --silent
+  - ./travis_qmake_gcc_cpp14_gcov
+  # Codecov
+  - ./get_code_cov
+  - codecov
+
+after_success:
+  # Codecov
+  - bash <(curl -s https://codecov.io/bash)
