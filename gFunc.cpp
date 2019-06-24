@@ -39,7 +39,7 @@ void gStep() {
 		showPercent = true;
 
 	for (long double i = 0; i < bots.size(); i++) {
-		bots[i].step();
+		bots[std::lroundl(i)].step();
 		gui::checkEvents();
 		if (showPercent) {
 			double percent = (i / bots.size()) * ((double)100);

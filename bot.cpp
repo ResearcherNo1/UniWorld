@@ -7,7 +7,12 @@ extern std::pmr::vector<bot> bots;
 extern int season;
 bot* b;
 
-bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
+void signal_handler(int signal) {
+	if (signal == SIGABRT)
+		std::cerr << "SIGABRT captured\n";
+}
+
+bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, const bool free) {
 #pragma warning(push)
 #pragma warning(disable : 4996)
 	srand();
@@ -21,8 +26,6 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		minrNum = 0;
 		chainNext = chainPrev = -1;
 		red = green = blue = 170;
-		n = 0;
-		born = 400;
 	}
 	else {
 		//Вычисляем указатель мутации
@@ -30,7 +33,6 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		//Копируем геном родителя
 		for (size_t i = 0; i < DNA_SIZE; i++)
 			DNA[i] = parent->DNA[i];
-
 		//Мутируем
 		for (short i = 0; i < MUT_COEF; i++) {
 			DNA[mutPtr] = getRandomNumber(0, 255);
@@ -39,15 +41,10 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 				mutPtr -= DNA_SIZE;
 		}
 
-		//Вычисляем порог рождаемости
-		for (size_t i = 0; i < DNA_SIZE; i++)
-			born += DNA[i];
-		born /= 16;
-
+		//Забираем половину энергии у родителя
 		energy = (parent->energy) / 2;
-		parent->energy /= 2;
-
 		minrNum = (parent->minrNum) / 2;
+		parent->energy /= 2;
 		parent->minrNum /= 2;
 
 		red = parent->red;
@@ -55,7 +52,7 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 		blue = parent->blue;
 
 		if (free == false) {
-			if (parent->chainNext == -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
+			if (parent->chainNext <= -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
 				parent->chainNext = N; //То вставляем туда новорожденного бота
 				chainPrev = parent->n; //У новорожденного ссылка на предыдущего указывает на бота-предка
 				chainNext = -1;        //Ссылка на следующего пуста, новорожденный бот является крайним в цепочке
@@ -66,17 +63,20 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 				chainNext = parent->n; // у новорожденного ссылка на следующего указывает на бота-предка
 				chainPrev = -1;        // ссылка на предыдущего пуста, новорожденный бот является крайним в цепочке 
 			}
-		}
+		} 
 		else {
 			chainPrev = -1;
 			chainNext = -1;
 		}
 	}
 
+	//Вычисляем порог рождаемости
+	for (size_t i = 0; i < DNA_SIZE; i++)
+		born += DNA[i];
+	born /= 32;
 
-	//Указатель инструкции в самом начале
+	//Помещаем указатель инструкции в самоe начало
 	IP = 0;
-
 	//Очищаем стек и регистры
 	for (size_t i = 0; i < SUB_SIZE; i++) {
 		stack[i] = -1;
@@ -85,16 +85,19 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 	heapPtr = 0;
 
 	coorX = X; coorY = Y;
-	world[X][Y] = N;
 
 	condition = alive;
-	decompose = 0;
 	direct = down;
+	decompose = 0;
+
 
 	auto a = bots.begin(); //Итератор для вставки
+
 	//Если нет родителей - вставляем в конец вектора
-	if (parent == nullptr) 
+	if (parent == nullptr) {
 		bots.push_back(*this);
+		world[X][Y] = N;
+	}
 	else {
 		//Если N больше размера вектора - вставляем на место родителя
 		if (N >= bots.size()) {
@@ -109,12 +112,27 @@ bot::bot(unsigned int X, unsigned int Y, bot* parent, size_t N, bool free) {
 			bots.insert(a, *this);
 		}
 
-		long i = n - 10;
-		if (i < 0)
+		world[X][Y] = n;
+
+		unsigned long i = n;
+		if (i == 0)
 			i = 0;
-		for (i; i < bots.size(); i++) {//Обновление итераторов
+		else
+			i--;
+		//Обновление итераторов
+		for (i; i < bots.size(); i++) { 
 			bots[i].n = i;
-			world[bots[i].coorX][bots[i].coorY] = i;
+			int x = bots[i].coorX;
+			int y = bots[i].coorY;
+
+			auto handler = std::signal(SIGABRT, signal_handler);
+			if (handler == SIG_ERR)
+				std::cerr << "Signal setup failed\n";
+			else {
+				assert(x >= 0 && x < WORLD_WIDTH);
+				assert(y > 0 && y <= WORLD_HEIGHT + 1);
+				world[bots[i].coorX][bots[i].coorY] = i;
+			}
 		}
 	}
 }
@@ -149,6 +167,7 @@ unsigned int bot::getX(unsigned short n) {
 		if (x > MAX_X)
 			x = 0;
 	}
+
 	return x;
 }
 
@@ -161,6 +180,7 @@ unsigned int bot::getY(unsigned short n) {
 		y--;
 	else if (n == 4 || n == 5 || n == 6)
 		y++;
+
 	return y;
 }
 
@@ -172,7 +192,7 @@ bool bot::isRelative(bot _bot) {
 	for (size_t i = 0; i < DNA_SIZE; i++) //Поячеечно сверяем геномы
 		if (DNA[i] != _bot.DNA[i]) {
 			dif++;
-			if (dif > 8) return false; //Если несовпадений > 8, то боты не родственники
+			if (dif > MUT_COEF) return false; //Если несовпадений > стандартное кол-во мутаций, то боты не родственники
 		}
 	return true;
 }
@@ -224,6 +244,10 @@ void bot::print(std::string a) {
 }
 
 void bot::step() {
+	auto handler = std::signal(SIGABRT, signal_handler);
+	if (handler == SIG_ERR)
+		std::cerr << "Signal setup failed\n";
+
 	//Если бот - органика, выходим
 	if (condition == organic_hold) {
 		decompose++;
@@ -248,7 +272,8 @@ void bot::step() {
 
 	//Если бот не находится в состоянии приёма
 	if (!(condition == input))
-		for (unsigned short cyc = 0; cyc < 25; cyc++) { //Разрешено не более 25 команд за ход
+		//Разрешено не более 25 команд за ход
+		for (unsigned short cyc = 0; cyc < 25; cyc++) {
 		unsigned short command = DNA[IP]; //Текущая команда
 
 		//Относительная смена направления
@@ -300,7 +325,7 @@ void bot::step() {
 		*/
 		else if (command == 26) {
 			//Если бот многоклеточный
-			if (chainPrev != -1 || chainNext != -1)
+			if (chainPrev > -1 || chainNext > -1)
 				//Никуда не двигаемся - ходить могут только одноклеточные
 				incIP(1);
 			else {
@@ -308,6 +333,8 @@ void bot::step() {
 
 				unsigned int x = getX(param + direct); //Получаем координаты клетки
 				unsigned int y = getY(param + direct); //
+
+				assert(world[x][y] < bots.size());
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -330,7 +357,7 @@ void bot::step() {
 				}
 			}
 			break; //Выходим, так как команда "Шаг" - завершающая
-		} //
+		}
 
 		/*Шаг в абсолютном направлении
 			Если
@@ -342,7 +369,7 @@ void bot::step() {
 		*/
 		else if (command == 27) {
 			//Если бот многоклеточный
-			if (chainPrev != -1 || chainNext != -1)
+			if (chainPrev > -1 || chainNext > -1)
 				//Никуда не двигаемся - ходить могут только одноклеточные
 				incIP(1);
 			else {
@@ -350,6 +377,8 @@ void bot::step() {
 
 				unsigned int x = getX(param); //Получаем координаты клетки
 				unsigned int y = getY(param); //
+
+				assert(world[x][y] < bots.size());
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -389,6 +418,7 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
+			assert(world[x][y] < bots.size());
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -455,6 +485,7 @@ void bot::step() {
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
 
+			assert(world[x][y] < bots.size());
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -522,6 +553,8 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 			size_t wc = world[x][y]; //Определяем объект
 
+			assert(wc < bots.size());
+
 			if (wc == empty) { //Если пусто
 				incIP(2);
 			}
@@ -554,6 +587,8 @@ void bot::step() {
 			unsigned int y = getY(param); //
 			size_t wc = world[x][y]; //Определяем объект
 
+			assert(wc < bots.size());
+
 			if (wc == empty) { //Если пусто
 				incIP(2);
 			}
@@ -584,6 +619,7 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
 
+			assert(world[x][y] < bots.size());
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -626,6 +662,7 @@ void bot::step() {
 			unsigned int x = getX(param); //Вычисляем координаты клетки
 			unsigned int y = getY(param); //
 
+			assert(world[x][y] < bots.size());
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -674,6 +711,8 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
+			assert(world[x][y] < bots.size());
+
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
 			else if (world[x][y] == empty) //Если пусто
@@ -705,6 +744,8 @@ void bot::step() {
 
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
+
+			assert(world[x][y] < bots.size());
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -755,7 +796,7 @@ void bot::step() {
 			 равно/больше    +2
 		*/
 		else if (command == 38) {
-			unsigned long param = std::lround(getParam() * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+			long param = std::lround(getParam() * HEIGHT_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
 
 			if (coorY < param)
 				incIP(2);
@@ -783,7 +824,7 @@ void bot::step() {
 			 равно/больше    +2
 		*/
 		else if (command == 40) {
-			long param = std::lround(DNA[IP + 1] * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
+			long param = std::lround(getParam() * ENERGY_COEF); //Считываем следующий за командой байт и умножаем на коэффициент
 
 			if (minrNum < param)
 				incIP(2);
@@ -880,9 +921,9 @@ void bot::step() {
 			внутри цепочки   +3
 		*/
 		else if (command == 49) {
-			if (chainNext == -1 && chainPrev == -1)
+			if (chainNext <= -1 && chainPrev <= -1)
 				incIP(1);
-			else if (chainNext == -1 || chainPrev == -1)
+			else if (chainNext <= -1 || chainPrev <= -1)
 				incIP(2);
 			else
 				incIP(3);
@@ -1692,8 +1733,12 @@ void bot::step() {
 
 	energy -= 4;
 
+	
 		//Если бот в цепочке
 		if (chainNext > -1 && chainPrev > -1) {
+			assert(chainNext < bots.size());
+			assert(chainPrev < bots.size());
+
 			//Делим минералы
 			unsigned int min = minrNum + bots[chainNext].minrNum + bots[chainPrev].minrNum;
 			minrNum = (min / 3) + (min % 3);
@@ -1707,6 +1752,9 @@ void bot::step() {
 			//Связано это с тем, что в крайних ботах в цепочке должно быть больше энергии
 			//Чтобы они плодили новых ботов и удлиняли цепочку
 			if ((bots[chainNext].chainNext > -1 || bots[chainNext].chainPrev > -1) && (bots[chainPrev].chainNext > -1 || bots[chainPrev].chainPrev > -1)) {
+				assert(chainNext < bots.size());
+				assert(chainPrev < bots.size());
+
 				unsigned int hlt = (energy + bots[chainNext].energy + bots[chainPrev].energy);
 				energy = (min / 3) + (min % 3);
 				bots[chainNext].energy = hlt;
@@ -1715,6 +1763,8 @@ void bot::step() {
 		}
 		//Если бот имеет предыдущего в цепочке
 		else if (chainPrev > -1) { 
+			assert(chainPrev < bots.size());
+
 			//Если предыдущий не является крайним в цепочке
 			if (bots[chainPrev].chainNext > -1 && bots[chainPrev].chainPrev > -1) {
 				//То распределяем энергию в пользу текущёго бота
@@ -1725,6 +1775,8 @@ void bot::step() {
 		}
 		//Если бот имеет следущего в цепочке
 		else if (chainNext > -1) { 
+			assert(chainNext < bots.size());
+
 			//Если предыдущий не является крайним в цепочке
 			if (bots[chainNext].chainNext > -1 && bots[chainNext].chainPrev > -1) {
 				//То распределяем энергию в пользу текущёго бота
@@ -1740,7 +1792,7 @@ void bot::step() {
 			for (unsigned short i = 0; i < 8; i++) {
 				unsigned int x = getX(i);
 				unsigned int y = getY(i);
-				if (world[x][y] == empty) {
+				if (world[x][y] == empty || world[x][y] == wall) {
 					a = i;
 					break;
 				}
@@ -1757,22 +1809,28 @@ void bot::step() {
 			}
 		}
 		try {	
-		//Если энергии стало меньше 1
-		if (energy < 1) {
-			condition = organic_sink; //Отмечаем как органику
-			if (chainPrev != -1)      //Если состоит во многоклеточной цепочке - удаляем
-				bots[chainPrev].chainNext = -1;
-			if (chainNext != -1)
-				bots[chainNext].chainPrev = -1;
-		}
+			//Если энергии стало меньше 1
+			if (energy < 1) {
+				condition = organic_sink; //Отмечаем как органику
 
+				//Если состоит во многоклеточной цепочке - удаляем
+				if (chainPrev > -1) {
+					assert(chainPrev < bots.size());
+					bots[chainPrev].chainNext = -1;
+				}
+				if (chainNext > -1) {
+					assert(chainNext < bots.size());
+					bots[chainNext].chainPrev = -1;
+				}
+			}
 
+			assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
 			//Если бот глубже, чем MAX_Y / 2, то он начинает накапливать минералы
-			if (this->coorY > (MAX_Y / 2))
+			if (coorY > (MAX_Y / 2))
 				minrNum++;
-			else if (this->coorY > (MAX_Y / 2 + MAX_Y / 4))
+			else if (coorY > (MAX_Y / 2 + MAX_Y / 4))
 				minrNum += 2;
-			else if (this->coorY > (MAX_Y - MAX_Y / 10))
+			else if (coorY > (MAX_Y - MAX_Y / 10))
 				minrNum += 3;
 
 			//Проверка предела
@@ -1784,28 +1842,42 @@ void bot::step() {
 }
 
 void bot::death() {
-	//Если n выходит за пределы вектора
-	if (n >= bots.size())
-		//Вычисляем итератор через адрес
-		//С++03 гарантирует непрерывное хранение элементов в памяти вектора
-		//В долгосрочной перспективе работать не будет, но для функции удаления сойдёт
-		n = this - &bots[0];
+	//Вычисляем итератор через адрес
+	//С++03 гарантирует непрерывное хранение элементов в памяти вектора
+	//В долгосрочной перспективе работать не будет, но для функции удаления сойдёт
+	n = this - &bots[0];
 
-	world[coorX][coorY] = empty; //Удаление бота с карты
-	auto a = bots.begin() + n;   //Из вектора
-	bots.erase(a);               //
+	auto handler = std::signal(SIGABRT, signal_handler);
+	if (handler == SIG_ERR)
+		std::cerr << "Signal setup failed\n";
+	else {
+		assert(coorX >= 0 && coorX < WORLD_WIDTH);
+		assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
+		world[coorX][coorY] = empty; //Удаление бота с карты
+	}
 
-	long i = n - 10;
-	if (i < 0)
+	assert(n < bots.size());
+	auto a = bots.begin() + n; //Из вектора
+	bots.erase(a);             //
+
+	unsigned long i = n;
+	if (i == 0)
 		i = 0;
-	for (i; i < bots.size(); i++) { //Обновление итераторов
+	else
+		i--;
+	//Обновление итераторов
+	for (i; i < bots.size(); i++) {
 		bots[i].n = i;
+		int x = bots[i].coorX;
+		int y = bots[i].coorY;
+		assert(x >= 0 && x < WORLD_WIDTH);
+		assert(y > 0 && y <= WORLD_HEIGHT + 1);
 		world[bots[i].coorX][bots[i].coorY] = i;
 	}
 
-	if (chainPrev > 0)           //Если во многоклеточной цепочке - тоже удаляем
+	if (chainPrev > -1) //Если во многоклеточной цепочке - тоже удаляем
 		bots[chainPrev].chainNext = -1;
-	if (chainNext > 0)
+	if (chainNext > -1)
 		bots[chainNext].chainPrev = -1;
 }
 
