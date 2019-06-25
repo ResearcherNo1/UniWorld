@@ -346,7 +346,7 @@ void bot::step() {
 				unsigned int y = getY(param + direct); //
 
 				long long size = static_cast<long long>(bots.size());
-				assert(world[x][y] < size);
+				assert(world[x][y] < size || world[x][y] == wall);
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -391,7 +391,7 @@ void bot::step() {
 				unsigned int y = getY(param); //
 
 				long long size = static_cast<long long>(bots.size());
-				assert(world[x][y] < size);
+				assert(world[x][y] < size || world[x][y] == wall);
 
 				if (world[x][y] == empty) { //Если на клетке пусто
 					world[x][y] = n;
@@ -432,7 +432,7 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 
 			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
+			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -500,7 +500,7 @@ void bot::step() {
 			unsigned int y = getY(param); //
 
 			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
+			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
@@ -637,7 +637,7 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 
 			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
+			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -681,7 +681,7 @@ void bot::step() {
 			unsigned int y = getY(param); //
 
 			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
+			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
@@ -731,7 +731,7 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 
 			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
+			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);

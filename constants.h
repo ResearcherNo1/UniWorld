@@ -23,7 +23,7 @@ constexpr double HEIGHT_COEF = WORLD_HEIGHT / DNA_SIZE;
 constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
 constexpr auto FREE = true;
 constexpr auto CHAIN = false;
-constexpr auto DECOMPOSE_TIME = 50;
+constexpr auto DECOMPOSE_TIME = 10;
 constexpr auto MUT_COEF = 32;
 
 
@@ -42,7 +42,7 @@ inline T getRandomNumber(T min, T max) {
 
 	if (min < 0) //—оздание исключени€ при маленьком минимальном числе
 	{
-		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():—лишком маленький низкий порог диапазона" << std::endl;
+		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():Ќижний порог диапазона меньше 0" << std::endl;
 		system("exit");
 	}
 
@@ -58,7 +58,7 @@ inline T getRandomNumber(T min, T max) {
 		system("exit");
 	}
 
-	static const long double fraction = 1.0 / (static_cast<long double>(RAND_MAX) + 1.0);
+	const long double fraction = 1.0 / (static_cast<long double>(RAND_MAX) + 1.0);
 	//–авномерно распредел€ем рандомное число в нашем диапазоне
 	return static_cast<T>(rand() * fraction * (max - min + 1) + min);
 }
