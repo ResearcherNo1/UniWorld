@@ -1,4 +1,4 @@
-#include "graphics.h"
+п»ї#include "graphics.h"
 
 extern SDL_Renderer* gRenderer;
 extern gui::LWindow gWindow;
@@ -248,18 +248,18 @@ bool gui::LWindow::hasKeyboardFocus() {
 void gui::checkEvents() {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
-		//Обработка закрытия
+		//РћР±СЂР°Р±РѕС‚РєР° Р·Р°РєСЂС‹С‚РёСЏ
 		if (e.type == SDL_QUIT)
 			work = false;
-		//Обработка событий окна
+		//РћР±СЂР°Р±РѕС‚РєР° СЃРѕР±С‹С‚РёР№ РѕРєРЅР°
 		else if (e.type == SDL_WINDOWEVENT)
 			gWindow.handleEvent(e);
-		//Обработка нажатий кнопок
+		//РћР±СЂР°Р±РѕС‚РєР° РЅР°Р¶Р°С‚РёР№ РєРЅРѕРїРѕРє
 		else if (e.type == SDL_KEYDOWN) {
-			//Обработка выхода через Esc
+			//РћР±СЂР°Р±РѕС‚РєР° РІС‹С…РѕРґР° С‡РµСЂРµР· Esc
 			if (e.key.keysym.sym == SDLK_ESCAPE)
 				work = false;
-			//Обработка паузы ("F1")
+			//РћР±СЂР°Р±РѕС‚РєР° РїР°СѓР·С‹ ("F1")
 			else if (e.key.keysym.sym == SDLK_F1) {
 				pause = !pause;
 				if (pause)
@@ -267,7 +267,7 @@ void gui::checkEvents() {
 				else
 					SDL_SetWindowTitle(gWindow.mWindow, "UniWorld");
 			}
-			//Обработка смены режима ("F2")
+			//РћР±СЂР°Р±РѕС‚РєР° СЃРјРµРЅС‹ СЂРµР¶РёРјР° ("F2")
 			else if (e.key.keysym.sym == SDLK_F2) {
 				paintMode = !paintMode;
 				if (paintMode)
@@ -277,7 +277,7 @@ void gui::checkEvents() {
 				
 				gui::draw();
 			}
-			//Обработка просчёта шага ("Space")
+			//РћР±СЂР°Р±РѕС‚РєР° РїСЂРѕСЃС‡С‘С‚Р° С€Р°РіР° ("Space")
 			else if (e.key.keysym.sym == SDLK_SPACE)
 				if (pause)
 					EnterlifeCount = lifeCount + 1;
@@ -290,16 +290,16 @@ void gui::draw() {
 	SDL_RenderClear(gRenderer);
 
 	for (size_t i = 0; i < bots.size(); i++) {
-		//Отрисовка живого бота
+		//РћС‚СЂРёСЃРѕРІРєР° Р¶РёРІРѕРіРѕ Р±РѕС‚Р°
 		if (bots[i].condition == alive) {
-			if (paintMode) //Если включён стандартный режим отрисовки
+			if (paintMode) //Р•СЃР»Рё РІРєР»СЋС‡С‘РЅ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ СЂРµР¶РёРј РѕС‚СЂРёСЃРѕРІРєРё
 				gSpriteBot.setColor(bots[i].red, bots[i].green, bots[i].blue);
 			else
 				gSpriteBot.setColor(0xFF, 255 - (bots[i].energy / 4), 0x00);
 
 			gSpriteBot.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
-		//Отрисовка органики
+		//РћС‚СЂРёСЃРѕРІРєР° РѕСЂРіР°РЅРёРєРё
 		else if (bots[i].condition = organic) {
 			if (paintMode)
 				gSpriteOrganic.setColor(0xFF, 0xFF, 0xFF);

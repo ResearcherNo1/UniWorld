@@ -1,4 +1,4 @@
-#include "gFunc.h"
+п»ї#include "gFunc.h"
 
 extern bool work;
 extern bool pause;
@@ -14,13 +14,13 @@ void gInit() {
 	printf("GUI has been initialized. Press any key to continue...");
 	_getch();
 
-	//Ставим стены
+	//РЎС‚Р°РІРёРј СЃС‚РµРЅС‹
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		world[i][0] = wall;
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		world[i][((unsigned long long(WORLD_HEIGHT + 1)))] = wall;
 
-	//Отмечаем пустоту
+	//РћС‚РјРµС‡Р°РµРј РїСѓСЃС‚РѕС‚Сѓ
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		for (size_t j = 1; j < WORLD_HEIGHT + 1; j++)
 			world[i][j] = empty;

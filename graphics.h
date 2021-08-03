@@ -1,4 +1,4 @@
-//Файл реализации графики
+п»ї//Р¤Р°Р№Р» СЂРµР°Р»РёР·Р°С†РёРё РіСЂР°С„РёРєРё
 //
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
@@ -55,7 +55,7 @@ namespace gui {
 		//Handles window events
 		void handleEvent(SDL_Event& e);
 		
-		//Переименование окна
+		//РџРµСЂРµРёРјРµРЅРѕРІР°РЅРёРµ РѕРєРЅР°
 		void rename(std::string _new);
 
 		//Deallocates internals

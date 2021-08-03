@@ -1,4 +1,4 @@
-//Файл основных констант
+п»ї//Р¤Р°Р№Р» РѕСЃРЅРѕРІРЅС‹С… РєРѕРЅСЃС‚Р°РЅС‚
 //
 #include <iostream>
 
@@ -34,35 +34,35 @@ constexpr long wall = static_cast<long>(BOTS_MAX + 10000);
 constexpr auto MAX_X = WORLD_WIDTH - 1;
 constexpr auto MAX_Y = static_cast<int>(WORLD_HEIGHT + 1);
 
-/* Получить текущее время для генерации рандомайза.*/
+/* РџРѕР»СѓС‡РёС‚СЊ С‚РµРєСѓС‰РµРµ РІСЂРµРјСЏ РґР»СЏ РіРµРЅРµСЂР°С†РёРё СЂР°РЅРґРѕРјР°Р№Р·Р°.*/
 #include <ctime>
 #define srand(); const time_t timer = time(NULL); srand(static_cast<unsigned int>(timer));
 
-//Функция выбора случайного числа в выбраном диапазоне
+//Р¤СѓРЅРєС†РёСЏ РІС‹Р±РѕСЂР° СЃР»СѓС‡Р°Р№РЅРѕРіРѕ С‡РёСЃР»Р° РІ РІС‹Р±СЂР°РЅРѕРј РґРёР°РїР°Р·РѕРЅРµ
 template <class T>
 inline T getRandomNumber(T min, T max) {
-	//Перед запуском вызвать srand();
+	//РџРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј РІС‹Р·РІР°С‚СЊ srand();
 
-	if (min < 0) //Создание исключения при маленьком минимальном числе
+	if (min < 0) //РЎРѕР·РґР°РЅРёРµ РёСЃРєР»СЋС‡РµРЅРёСЏ РїСЂРё РјР°Р»РµРЅСЊРєРѕРј РјРёРЅРёРјР°Р»СЊРЅРѕРј С‡РёСЃР»Рµ
 	{
-		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():Нижний порог диапазона меньше 0" << std::endl;
+		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():РќРёР¶РЅРёР№ РїРѕСЂРѕРі РґРёР°РїР°Р·РѕРЅР° РјРµРЅСЊС€Рµ 0" << std::endl;
 		system("exit");
 	}
 
-	if (max > RAND_MAX) //Создание исключения при превышении RAND_MAX
+	if (max > RAND_MAX) //РЎРѕР·РґР°РЅРёРµ РёСЃРєР»СЋС‡РµРЅРёСЏ РїСЂРё РїСЂРµРІС‹С€РµРЅРёРё RAND_MAX
 	{
-		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():Превышен максимальный порог диапазона" << std::endl;
+		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():РџСЂРµРІС‹С€РµРЅ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ РїРѕСЂРѕРі РґРёР°РїР°Р·РѕРЅР°" << std::endl;
 		system("exit");
 	}
 
 	if (min >= max)
 	{
-		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():Максимальный порог диапазона равен или больше минимального" << std::endl;
+		std::cout << std::endl << __LINE__ << "|" << "	getRandomNumber():РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ РїРѕСЂРѕРі РґРёР°РїР°Р·РѕРЅР° СЂР°РІРµРЅ РёР»Рё Р±РѕР»СЊС€Рµ РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ" << std::endl;
 		system("exit");
 	}
 
 	const long double fraction = 1.0 / (static_cast<long double>(RAND_MAX) + 1.0);
-	//Равномерно распределяем рандомное число в нашем диапазоне
+	//Р Р°РІРЅРѕРјРµСЂРЅРѕ СЂР°СЃРїСЂРµРґРµР»СЏРµРј СЂР°РЅРґРѕРјРЅРѕРµ С‡РёСЃР»Рѕ РІ РЅР°С€РµРј РґРёР°РїР°Р·РѕРЅРµ
 	return static_cast<T>(rand() * fraction * (max - min + 1) + min);
 }
 

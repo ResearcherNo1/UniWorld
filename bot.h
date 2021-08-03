@@ -1,4 +1,4 @@
-//Файл реализации ботов
+п»ї//Р¤Р°Р№Р» СЂРµР°Р»РёР·Р°С†РёРё Р±РѕС‚РѕРІ
 //
 #include "constants.h"
 #include <vector>
@@ -20,50 +20,50 @@
 
 class bot {
 public:	
-	         int    energy = 0;              //Кол-во энергии
-			 int    minrNum = 0;             //Кол-во накопленных минералов
-			 short  decompose = 0;           //Счётчик разложения
-	         cond   condition = cond::alive; //Состояние
+	         int    energy = 0;              //РљРѕР»-РІРѕ СЌРЅРµСЂРіРёРё
+			 int    minrNum = 0;             //РљРѕР»-РІРѕ РЅР°РєРѕРїР»РµРЅРЅС‹С… РјРёРЅРµСЂР°Р»РѕРІ
+			 short  decompose = 0;           //РЎС‡С‘С‚С‡РёРє СЂР°Р·Р»РѕР¶РµРЅРёСЏ
+	         cond   condition = cond::alive; //РЎРѕСЃС‚РѕСЏРЅРёРµ
 	         	    
-	         short  DNA[DNA_SIZE];           //Геном
-	unsigned int    IP = 0;                  //Указатель текущей инструкции
+	         short  DNA[DNA_SIZE];           //Р“РµРЅРѕРј
+	unsigned int    IP = 0;                  //РЈРєР°Р·Р°С‚РµР»СЊ С‚РµРєСѓС‰РµР№ РёРЅСЃС‚СЂСѓРєС†РёРё
 
-	         short  stack[SUB_SIZE];         //Стек
-	unsigned short  heapPtr = 0;             //Указатель верхушки стека
+	         short  stack[SUB_SIZE];         //РЎС‚РµРє
+	unsigned short  heapPtr = 0;             //РЈРєР°Р·Р°С‚РµР»СЊ РІРµСЂС…СѓС€РєРё СЃС‚РµРєР°
 
-	         short  registers[SUB_SIZE];     //Регистры
+	         short  registers[SUB_SIZE];     //Р РµРіРёСЃС‚СЂС‹
 
-	         int    coorX = 0;               //Координата X
-	         int    coorY = 1;               //Координата Y
-	         drct   direct = drct::up;       //Текущее направление
+	         int    coorX = 0;               //РљРѕРѕСЂРґРёРЅР°С‚Р° X
+	         int    coorY = 1;               //РљРѕРѕСЂРґРёРЅР°С‚Р° Y
+	         drct   direct = drct::up;       //РўРµРєСѓС‰РµРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 
-	    long long   chainPrev = -1;          //Cсылка на предыдущего бота в цепочке
-	    long long   chainNext = -1;          //Cсылка на следующего  бота в цепочке
-	         size_t n = 0;                   //Итератор в векторе bots 
+	    long long   chainPrev = -1;          //CСЃС‹Р»РєР° РЅР° РїСЂРµРґС‹РґСѓС‰РµРіРѕ Р±РѕС‚Р° РІ С†РµРїРѕС‡РєРµ
+	    long long   chainNext = -1;          //CСЃС‹Р»РєР° РЅР° СЃР»РµРґСѓСЋС‰РµРіРѕ  Р±РѕС‚Р° РІ С†РµРїРѕС‡РєРµ
+	         size_t n = 0;                   //РС‚РµСЂР°С‚РѕСЂ РІ РІРµРєС‚РѕСЂРµ bots 
 
-	         short  red = 0;                 //       красного
-	         short  green = 0;               //Кол-во зелёного
-	         short  blue = 0;                //       синего
+	         short  red = 0;                 //       РєСЂР°СЃРЅРѕРіРѕ
+	         short  green = 0;               //РљРѕР»-РІРѕ Р·РµР»С‘РЅРѕРіРѕ
+	         short  blue = 0;                //       СЃРёРЅРµРіРѕ
 
-	         int    born = 0;                //Критический порог энергии для рождения потомка
+	         int    born = 0;                //РљСЂРёС‚РёС‡РµСЃРєРёР№ РїРѕСЂРѕРі СЌРЅРµСЂРіРёРё РґР»СЏ СЂРѕР¶РґРµРЅРёСЏ РїРѕС‚РѕРјРєР°
 
 	bot(const unsigned int X, const unsigned int Y, bot* parent = nullptr, size_t N = 0, const bool free = true);
-	void death(); //Процедура смерти
+	void death(); //РџСЂРѕС†РµРґСѓСЂР° СЃРјРµСЂС‚Рё
 	
-	void incIP(unsigned int num = 1); //Функция увeличения указателя текущей команды
-	short getParam();                 //Функция получения параметра
+	void incIP(unsigned int num = 1); //Р¤СѓРЅРєС†РёСЏ СѓРІeР»РёС‡РµРЅРёСЏ СѓРєР°Р·Р°С‚РµР»СЏ С‚РµРєСѓС‰РµР№ РєРѕРјР°РЅРґС‹
+	short getParam();                 //Р¤СѓРЅРєС†РёСЏ РїРѕР»СѓС‡РµРЅРёСЏ РїР°СЂР°РјРµС‚СЂР°
 	
-	unsigned int getX(unsigned short direct); //Получение Х-координаты по направлению
-	unsigned int getY(unsigned short direct); //Получение Y-координаты по направлению
+	unsigned int getX(unsigned short direct); //РџРѕР»СѓС‡РµРЅРёРµ РҐ-РєРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РЅР°РїСЂР°РІР»РµРЅРёСЋ
+	unsigned int getY(unsigned short direct); //РџРѕР»СѓС‡РµРЅРёРµ Y-РєРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РЅР°РїСЂР°РІР»РµРЅРёСЋ
 	
-	bool isRelative(bot _bot);                //Определяет, родственник ли _bot
+	bool isRelative(bot _bot);                //РћРїСЂРµРґРµР»СЏРµС‚, СЂРѕРґСЃС‚РІРµРЅРЅРёРє Р»Рё _bot
 	
 	void goRed  (short power);
 	void goGreen(short power);
 	void goBlue (short power);
 	void print(std::string a);
 	
-	void step(); //Главная функция жизнeдеятельности
+	void step(); //Р“Р»Р°РІРЅР°СЏ С„СѓРЅРєС†РёСЏ Р¶РёР·РЅeРґРµСЏС‚РµР»СЊРЅРѕСЃС‚Рё
 };
 
 void radiation();
