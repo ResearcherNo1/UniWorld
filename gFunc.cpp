@@ -38,11 +38,11 @@ void gStep() {
 	if (pause && bots.size() >= 100)
 		showPercent = true;
 
-	for (long double i = 0; i < bots.size(); i++) {
-		bots[std::lroundl(i)].step();
+	for (size_t i = 0; i < bots.size(); i++) {
+		bots[i].step();
 		gui::checkEvents();
 		if (showPercent) {
-			double percent = (i / bots.size()) * ((double)100);
+			double percent = (i / bots.size()) * ((long double)100);
 			char buffer[27];
 			sprintf_s(buffer, 27, "UniWorld - Paused (%.1f%%)", percent);
 			gWindow.rename(buffer);
