@@ -24,7 +24,7 @@ constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
 constexpr auto FREE = true;
 constexpr auto CHAIN = false;
 constexpr auto DECOMPOSE_TIME = 10;
-constexpr auto MUT_COEF = 32;
+constexpr auto MUT_COEF = 4;
 
 
 //Navigation constants

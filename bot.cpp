@@ -39,7 +39,7 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 			DNA[i] = parent->DNA[i];
 		//Мутируем
 		for (short i = 0; i < MUT_COEF; i++) {
-			DNA[mutPtr] = getRandomNumber(0, 255);
+			DNA[mutPtr] = getRandomNumber<short>(0, 255);
 			mutPtr++;
 			if (mutPtr > DNA_MAX_INDEX)
 				mutPtr -= DNA_SIZE;
@@ -159,17 +159,17 @@ unsigned short bot::getParam() {
 	return DNA[ptr];
 }
 
-unsigned int bot::getX(unsigned short n) {
+unsigned int bot::getX(unsigned short direct) {
 	long x = coorX;
-	if (n > 7)
-		n -= 8;
+	if (direct > 7)
+		direct -= 8;
 
-	if (n == 0 || n == 6 || n == 7) {
+	if (direct == 0 || direct == 6 || direct == 7) {
 		x--;
 		if (x < 0)
 			x = MAX_X;
 	}
-	else if (n == 2 || n == 3 || n == 4) {
+	else if (direct == 2 || direct == 3 || direct == 4) {
 		x++;
 		if (x > MAX_X)
 			x = 0;
@@ -178,14 +178,14 @@ unsigned int bot::getX(unsigned short n) {
 	return x;
 }
 
-unsigned int bot::getY(unsigned short n) {
+unsigned int bot::getY(unsigned short direct) {
 	int y = coorY;
-	if (n > 7)
-		n -= 8;
+	if (direct > 7)
+		direct -= 8;
 
-	if (n < 3)
+	if (direct < 3)
 		y--;
-	else if (n == 4 || n == 5 || n == 6)
+	else if (direct == 4 || direct == 5 || direct == 6)
 		y++;
 
 	if (y > MAX_Y)
@@ -208,39 +208,39 @@ bool bot::isRelative(bot _bot) {
 	return true;
 }
 
-void bot::goRed(short n) {
-	red += n;
+void bot::goRed(short power) {
+	red += power;
 	if (red > 255)
 		red = 255;
 
-	green -= n;
-	blue -= n;
+	green -= power;
+	blue -= power;
 	if (green < 0)
 		green = 0;
 	if (blue < 0)
 		blue = 0;
 }
 
-void bot::goGreen(short n) {
-	green += n;
+void bot::goGreen(short power) {
+	green += power;
 	if (green > 255)
 		green = 255;
 
-	red -= n;
-	blue -= n;
+	red -= power;
+	blue -= power;
 	if (red < 0)
 		red = 0;
 	if (blue < 0)
 		blue = 0;
 }
 
-void bot::goBlue(short n) {
-	blue += n;
+void bot::goBlue(short power) {
+	blue += power;
 	if (blue > 255)
 		blue = 255;
 
-	red -= n;
-	green -= n;
+	red -= power;
+	green -= power;
 	if (red < 0)
 		red = 0;
 	if (green < 0)
@@ -317,7 +317,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			int hlt = std::lround(((season * 10) - coorY) / (3 - t)); //Формула вычисления энергии
+			short hlt = static_cast<short>(std::lround(((season * 10) - coorY) / (3 - t))); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -460,7 +460,7 @@ void bot::step() {
 													  //Типа, стесал свои зубы о панцирь жертвы)
 					bots[world[x][y]].death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
-					goRed(hl);                //Бот краснеет
+					goRed(static_cast<short>(hl));                //Бот краснеет
 					incIP(5);
 				}
 				//Если обед более бронированый
@@ -471,7 +471,7 @@ void bot::step() {
 					if (energy >= 2 * min1) {
 						bots[world[x][y]].death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
-						goRed(hl);                //Бот краснеет
+						goRed(static_cast<short>(hl));                //Бот краснеет
 						incIP(5);
 					}
 					//Если энергии меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы 
@@ -528,7 +528,7 @@ void bot::step() {
 													  //Типа, стесал свои зубы о панцирь жертвы)
 					bots[world[x][y]].death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
-					goRed(hl);                //Бот краснеет
+					goRed(static_cast<short>(hl));                //Бот краснеет
 					incIP(5);
 				}
 				//Если обед более бронированый
@@ -539,7 +539,7 @@ void bot::step() {
 					if (energy >= 2 * min1) {
 						bots[world[x][y]].death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
-						goRed(hl);                //Бот краснеет
+						goRed(static_cast<short>(hl));                //Бот краснеет
 						incIP(5);
 					}
 					//Если энергии меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы 
@@ -876,6 +876,7 @@ void bot::step() {
 				delete b;
 
 			incIP(1);
+			a = static_cast<unsigned short>(a); //C4244
 			if (chainNext > -1 && chainPrev > -1)
 				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
 			else
@@ -959,7 +960,7 @@ void bot::step() {
 			}
 			else {  // если минералов меньше 100, то все минералы переходят в энергию
 				energy += minrNum * 4;
-				goBlue(minrNum);
+				goBlue(static_cast<short>(minrNum));
 				minrNum = 0;
 			}
 			break;
@@ -988,6 +989,7 @@ void bot::step() {
 				delete b;
 
 			incIP(1);
+			a = static_cast<unsigned short>(a); //C4244
 			if (chainNext > -1 && chainPrev > -1)
 				b = new bot(getX(a), getY(a), this, n + 1, FREE);
 			else
@@ -1857,6 +1859,8 @@ void bot::step() {
 				born += std::lround(born * 0.25);
 				if (b != nullptr)
 					delete b;
+
+				a = static_cast<unsigned short>(a); //C4244
 				if (chainNext < -1 && chainPrev < -1)
 					b = new bot(getX(a), getY(a), this, n + 1, FREE);
 				else
@@ -1916,5 +1920,5 @@ void bot::death() {
 void radiation() {
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
 		if (world[i][1] != empty)
-			bots[world[i][1]].DNA[getRandomNumber(0, 255)] = getRandomNumber(0, 255);
+			bots[world[i][1]].DNA[getRandomNumber(0, 255)] = getRandomNumber<short>(0, 255);
 }

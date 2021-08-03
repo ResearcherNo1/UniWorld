@@ -24,8 +24,10 @@ SDL_Rect gSpriteClips[2];
 gui::LTexture gSpriteBot;
 gui::LTexture gSpriteOrganic;
 
-
-int _cdecl main(int argc, char* args[]) {
+#ifdef __cplusplus
+extern "C"
+#endif
+int _cdecl main(int argc, char *argv[]) {
 	gInit();
 	bot* a = new bot(MAX_X / 2, std::lround(MAX_Y / ((double)2.0003)));
 
