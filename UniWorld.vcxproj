@@ -116,7 +116,7 @@
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <CallingConvention>Cdecl</CallingConvention>
       <SmallerTypeCheck>false</SmallerTypeCheck>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link>

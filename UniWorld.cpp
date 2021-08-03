@@ -5,7 +5,8 @@
 #include "bot.h"
 #include "graphics.h"
 #include "gFunc.h"
-#include <Windows.h>
+#include <thread>
+#include <chrono>
 
 long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT+2)]; //Массив мира
 std::pmr::vector<bot> bots;	//Вектор ботов
@@ -39,7 +40,7 @@ int _cdecl main(int argc, char *argv[]) {
 				gStep();
 
 			gui::checkEvents();
-			Sleep(100);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 	}
 

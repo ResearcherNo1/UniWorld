@@ -12,7 +12,6 @@ extern uint_fast64_t lifeCount;
 extern uint_fast64_t EnterlifeCount;
 extern int season;
 
-extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
 extern std::pmr::vector<bot> bots;
 
 gui::LTexture::LTexture() {
@@ -278,8 +277,8 @@ void gui::checkEvents() {
 				
 				gui::draw();
 			}
-			//Обработка просчёта шага ("Enter")
-			else if (e.key.keysym.sym == SDLK_KP_ENTER)
+			//Обработка просчёта шага ("Space")
+			else if (e.key.keysym.sym == SDLK_SPACE)
 				if (pause)
 					EnterlifeCount = lifeCount + 1;
 
@@ -301,7 +300,7 @@ void gui::draw() {
 			gSpriteBot.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
 		}
 		//Отрисовка органики
-		else if (bots[i].condition < organic_sink) {
+		else if (bots[i].condition = organic) {
 			if (paintMode)
 				gSpriteOrganic.setColor(0xFF, 0xFF, 0xFF);
 			else

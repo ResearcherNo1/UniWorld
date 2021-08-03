@@ -15,16 +15,17 @@ constexpr auto BOTS_MAX = WORLD_WIDTH * WORLD_HEIGHT;
 //Bot constants
 constexpr auto DNA_SIZE = 256;
 constexpr auto DNA_MAX_INDEX = DNA_SIZE - 1;
+constexpr auto MAX_CYC = 4;
 constexpr auto SUB_SIZE = 8;
 constexpr auto SUB_MAX_INDEX = SUB_SIZE - 1;
-enum cond {organic_hold = 1, organic_sink, alive, input };
+enum cond {organic = 1, alive, input };
 enum drct : unsigned short { upper_left, up = 1, upper_right, right = 3, bottom_right, down = 5, bottom_left, left = 7 };
 constexpr double HEIGHT_COEF = WORLD_HEIGHT / DNA_SIZE;
 constexpr double ENERGY_COEF = ((double)999) / DNA_SIZE;
 constexpr auto FREE = true;
 constexpr auto CHAIN = false;
-constexpr auto DECOMPOSE_TIME = 10;
-constexpr auto MUT_COEF = 4;
+constexpr auto DECOMPOSE_TIME = 5;
+constexpr auto MUT_COEF = 8;
 
 
 //Navigation constants
@@ -33,7 +34,9 @@ constexpr long wall = static_cast<long>(BOTS_MAX + 10000);
 constexpr auto MAX_X = WORLD_WIDTH - 1;
 constexpr auto MAX_Y = static_cast<int>(WORLD_HEIGHT + 1);
 
-#define srand(); 	/* Получить текущее время для генерации рандомайза.*/ /* ! Лучше делать с миллисекундами */ struct tm *st; const time_t timer = time(NULL); st = localtime(&timer); /* Перевод времени в секунды */ int rnd_seed = 3600 * st->tm_hour + 60 * st->tm_min + st->tm_sec; srand(rnd_seed);
+/* Получить текущее время для генерации рандомайза.*/
+#include <ctime>
+#define srand(); const time_t timer = time(NULL); srand(static_cast<unsigned int>(timer));
 
 //Функция выбора случайного числа в выбраном диапазоне
 template <class T>

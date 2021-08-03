@@ -1,13 +1,19 @@
 //Файл реализации ботов
 //
 #include "constants.h"
-#include <ctime>
 #include <vector>
 #include <string>
-#undef NDEBUG
-#include <cassert>
-#include <csignal>
-#define NDEBUG
+
+#ifdef NDEBUG
+	#undef NDEBUG
+	#include <cassert>
+	#include <csignal>
+	#define NDEBUG
+#else
+	#include <cassert>
+	#include <csignal>
+#endif
+
 
 #ifndef BOT_H
 #define BOT_H
@@ -39,24 +45,24 @@ public:
 	         short  green = 0;               //Кол-во зелёного
 	         short  blue = 0;                //       синего
 
-	         int    born = 0;      //Критический порог энергии для рождения потомка
+	         int    born = 0;                //Критический порог энергии для рождения потомка
 
 	bot(const unsigned int X, const unsigned int Y, bot* parent = nullptr, size_t N = 0, const bool free = true);
 	void death(); //Процедура смерти
-
+	
 	void incIP(unsigned int num = 1); //Функция увeличения указателя текущей команды
-	unsigned short getParam();        //Функция получения параметра
-
+	short getParam();                 //Функция получения параметра
+	
 	unsigned int getX(unsigned short direct); //Получение Х-координаты по направлению
 	unsigned int getY(unsigned short direct); //Получение Y-координаты по направлению
-
+	
 	bool isRelative(bot _bot);                //Определяет, родственник ли _bot
-
+	
 	void goRed  (short power);
 	void goGreen(short power);
 	void goBlue (short power);
 	void print(std::string a);
-
+	
 	void step(); //Главная функция жизнeдеятельности
 };
 

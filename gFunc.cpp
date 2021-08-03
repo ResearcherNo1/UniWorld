@@ -3,8 +3,6 @@
 extern bool work;
 extern bool pause;
 extern bool paintMode;
-extern uint_fast64_t lifeCount;
-extern uint_fast64_t EnterlifeCount;
 extern int season;
 extern gui::LWindow gWindow;
 
@@ -42,7 +40,7 @@ void gStep() {
 		bots[i].step();
 		gui::checkEvents();
 		if (showPercent) {
-			double percent = (i / bots.size()) * ((long double)100);
+			double percent = (long double(i) / bots.size()) * ((long double)100);
 			char buffer[27];
 			sprintf_s(buffer, 27, "UniWorld - Paused (%.1f%%)", percent);
 			gWindow.rename(buffer);
