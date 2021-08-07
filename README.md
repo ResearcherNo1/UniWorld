@@ -8,6 +8,11 @@
 
 [Принцип работы](https://github.com/postusername/UniWorld/HowWorks.md)
 
+### Зависимости:
+```
+	SDL2 (Core, Image) — already included as headers
+```
+
 ### Roadmap
 
 - [x] Сделать реализацию ботов

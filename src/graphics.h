@@ -4,8 +4,8 @@
 #define GRAPHICS_H
 
 //Using SDL, SDL_image, standard IO, and strings
-#include <SDL.h>
-#include <SDL_image.h>
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_image.h"
 #include <conio.h>
 #include <sstream>
 #include "constants.h"

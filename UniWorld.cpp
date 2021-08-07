@@ -1,10 +1,10 @@
 ﻿//Точка входа
 //
 
-#include "constants.h"
-#include "bot.h"
-#include "graphics.h"
-#include "gFunc.h"
+#include "src/constants.h"
+#include "src/bot.h"
+#include "src/graphics.h"
+#include "src/gFunc.h"
 #include <thread>
 #include <chrono>
 
