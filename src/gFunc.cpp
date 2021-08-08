@@ -12,7 +12,7 @@ extern std::pmr::vector<bot> bots;
 void gInit() {
 	gui::initialize();
 	printf("GUI has been initialized. Press any key to continue...");
-	_getch();
+	if (_getch() == 27) return;
 
 	//Ставим стены
 	for (size_t i = 0; i < WORLD_WIDTH; i++)

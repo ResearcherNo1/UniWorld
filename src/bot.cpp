@@ -316,7 +316,7 @@ void bot::step() {
 			else
 				t = 2;
 
-			short hlt = static_cast<short>(std::lround(((season * 10) - coorY) / (3 - t))); //Формула вычисления энергии
+			short hlt = static_cast<short>(std::lround(((double(season) * 10) - coorY) / (3 - t))); //Формула вычисления энергии
 			if (hlt > 0) {
 				energy += hlt; //Прибавляем полученную энергия к энергии бота
 				goGreen(hlt); //Бот от этого зеленеет
@@ -357,7 +357,7 @@ void bot::step() {
 				else if (world[x][y] == wall) { //Если на клетке стена
 					incIP(3);
 				}
-				else if (bots[world[x][y]].condition = organic) { //Если на клетке органика
+				else if (bots[world[x][y]].condition == organic) { //Если на клетке органика
 					incIP(4);
 				}
 				else if (isRelative(bots[world[x][y]])) { //Если на клетке родня
@@ -402,7 +402,7 @@ void bot::step() {
 				else if (world[x][y] == wall) { //Если на клетке стена
 					incIP(3);
 				}
-				else if (bots[world[x][y]].condition = organic) { //Если на клетке органика
+				else if (bots[world[x][y]].condition == organic) { //Если на клетке органика
 					incIP(4);
 				}
 				else if (isRelative(bots[world[x][y]])) { //Если на клетке родня
@@ -439,7 +439,7 @@ void bot::step() {
 			else if (world[x][y] == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[world[x][y]].condition = organic) { //Если там оказалась органика
+			else if (bots[world[x][y]].condition == organic) { //Если там оказалась органика
 				bots[world[x][y]].death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
@@ -507,7 +507,7 @@ void bot::step() {
 			else if (world[x][y] == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[world[x][y]].condition = organic) { //Если там оказалась органика
+			else if (bots[world[x][y]].condition == organic) { //Если там оказалась органика
 				bots[world[x][y]].death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
@@ -576,7 +576,7 @@ void bot::step() {
 			else if (wc == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[wc].condition = organic) { //Если органика
+			else if (bots[wc].condition == organic) { //Если органика
 				incIP(4);
 			}
 			else if (isRelative(bots[wc])) { //Если родня
@@ -611,7 +611,7 @@ void bot::step() {
 			else if (wc == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[wc].condition = organic) { //Если органика
+			else if (bots[wc].condition == organic) { //Если органика
 				incIP(4);
 			}
 			else if (isRelative(bots[wc])) { //Если родня
@@ -642,7 +642,7 @@ void bot::step() {
 				incIP(2);
 			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition = organic) //Если органика
+			else if (bots[world[x][y]].condition == organic) //Если органика
 				incIP(4);
 			else { //Остался один вариант - впереди живой бот
 				int hlt0 = energy;                   // определим количество энергии и минералов
@@ -686,7 +686,7 @@ void bot::step() {
 				incIP(2);
 			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition = organic) //Если органика
+			else if (bots[world[x][y]].condition == organic) //Если органика
 				incIP(4);
 			else { //Остался один вариант - впереди живой бот
 				int hlt0 = energy;                   // определим количество энергии и минералов
@@ -736,7 +736,7 @@ void bot::step() {
 				incIP(2);
 			else if (world[x][y] == empty) //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition = organic) //Если органика
+			else if (bots[world[x][y]].condition == organic) //Если органика
 				incIP(4);
 			else { //Если бот
 				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
@@ -771,7 +771,7 @@ void bot::step() {
 				incIP(2);
 			else if (world[x][y] == empty) //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition = organic) //Если органика
+			else if (bots[world[x][y]].condition == organic) //Если органика
 				incIP(4);
 			else { //Если бот
 				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
