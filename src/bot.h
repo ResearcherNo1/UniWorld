@@ -1,7 +1,9 @@
 ﻿//Файл реализации ботов
 //
 #include "constants.h"
-#include <vector>
+#include "world.hpp"
+#include "serialize.hpp"
+#include <map>
 #include <string>
 
 #ifdef NDEBUG
@@ -23,7 +25,7 @@ public:
 	         int    energy = 0;              //Кол-во энергии
 			 int    minrNum = 0;             //Кол-во накопленных минералов
 			 short  decompose = 0;           //Счётчик разложения
-	         cond   condition = cond::alive; //Состояние
+	         cond   condition = alive;       //Состояние
 	         	    
 	         short  DNA[DNA_SIZE];           //Геном
 	unsigned int    IP = 0;                  //Указатель текущей инструкции
@@ -35,11 +37,11 @@ public:
 
 	         int    coorX = 0;               //Координата X
 	         int    coorY = 1;               //Координата Y
-	         drct   direct = drct::up;       //Текущее направление
+	         drct   direct = up;             //Текущее направление
 
-	    long long   chainPrev = -1;          //Cсылка на предыдущего бота в цепочке
-	    long long   chainNext = -1;          //Cсылка на следующего  бота в цепочке
-	         size_t n = 0;                   //Итератор в векторе bots 
+	         id_t   chainPrev = -1;          //Cсылка на предыдущего бота в цепочке
+	         id_t   chainNext = -1;          //Cсылка на следующего  бота в цепочке
+			 id_t   ownId = 1;               //Собственный ID бота
 
 	         short  red = 0;                 //       красного
 	         short  green = 0;               //Кол-во зелёного
@@ -47,7 +49,17 @@ public:
 
 	         int    born = 0;                //Критический порог энергии для рождения потомка
 
-	bot(const unsigned int X, const unsigned int Y, bot* parent = nullptr, size_t N = 0, const bool free = true);
+	NVX_SERIALIZABLE(&energy, &minrNum, &decompose, &condition,
+	                 NVX_SERIALIZABLE_STATIC_ARRAY(DNA, DNA_SIZE), &IP,
+	                 NVX_SERIALIZABLE_STATIC_ARRAY(stack, SUB_SIZE), &heapPtr,
+	                 NVX_SERIALIZABLE_STATIC_ARRAY(registers, SUB_SIZE),
+	                 &coorX, &coorY, &direct,
+	                 &chainPrev, &chainNext, &ownId,
+	                 &red, &green, &blue,
+	                 &born);
+
+	bot() = default;
+	bot(const unsigned int X, const unsigned int Y, bot* parent = nullptr, const id_t N = 0, const bool free = true);
 	void death(); //Процедура смерти
 	
 	void incIP(unsigned int num = 1); //Функция увeличения указателя текущей команды
@@ -57,6 +69,7 @@ public:
 	unsigned int getY(unsigned short direct); //Получение Y-координаты по направлению
 	
 	bool isRelative(bot _bot);                //Определяет, родственник ли _bot
+	bool isRelative(bot* _bot);
 	
 	void goRed  (short power);
 	void goGreen(short power);

@@ -2,8 +2,10 @@
 //
 #include "bot.h"
 
-extern long long world[WORLD_WIDTH][((unsigned long long)WORLD_HEIGHT + 2)];
-extern std::pmr::vector<bot> bots;
+extern abstractWorld<id_t> world;
+extern std::map<id_t, bot*> bots;
+extern std::vector<id_t> deleted;
+extern id_t currentId;
 extern int season;
 bot* b;
 
@@ -12,7 +14,7 @@ void signal_handler(int signal) {
 		std::cerr << "SIGABRT captured\n";
 }
 
-bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, const bool free) {
+bot::bot(const unsigned int X, const unsigned int Y, bot* parent, const id_t N, const bool free) {
 #pragma warning(push)
 #pragma warning(disable : 4996)
 	srand();
@@ -32,17 +34,15 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 		red = green = blue = 170;
 	}
 	else {
-		//Вычисляем указатель мутации
-		size_t mutPtr = getRandomNumber(0, 255);
 		//Копируем геном родителя
-		for (size_t i = 0; i < DNA_SIZE; i++)
-			DNA[i] = parent->DNA[i];
+		std::memcpy(DNA, parent->DNA, DNA_SIZE * sizeof(short));
+		//Вычисляем указатель мутации
+		size_t mutPtr = getRandomNumber(0, DNA_MAX_INDEX);
 		//Мутируем
 		for (short i = 0; i < MUT_COEF; i++) {
 			DNA[mutPtr] = getRandomNumber<short>(0, 255);
-			mutPtr++;
-			if (mutPtr > DNA_MAX_INDEX)
-				mutPtr -= DNA_SIZE;
+
+			mutPtr = (++mutPtr) % DNA_SIZE;
 		}
 
 		//Забираем половину энергии у родителя
@@ -56,18 +56,18 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 		blue = parent->blue;
 
 		if (free == false) {
-			if (parent->chainNext <= -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
+			if (parent->chainNext == -1) { //Eсли у бота-предка ссылка на следующего бота в многоклеточной цепочке пуста
 				parent->chainNext = N; //То вставляем туда новорожденного бота
-				chainPrev = parent->n; //У новорожденного ссылка на предыдущего указывает на бота-предка
+				chainPrev = parent->ownId; //У новорожденного ссылка на предыдущего указывает на бота-предка
 				chainNext = -1;        //Ссылка на следующего пуста, новорожденный бот является крайним в цепочке
 			}
 			else //Если у бота-предка ссылка на предыдущего бота в многоклеточной цепочке пуста 
 			{
 				parent->chainPrev = N; // то вставляем туда новорожденного бота
-				chainNext = parent->n; // у новорожденного ссылка на следующего указывает на бота-предка
+				chainNext = parent->ownId; // у новорожденного ссылка на следующего указывает на бота-предка
 				chainPrev = -1;        // ссылка на предыдущего пуста, новорожденный бот является крайним в цепочке 
 			}
-		} 
+		}
 		else {
 			chainPrev = -1;
 			chainNext = -1;
@@ -88,60 +88,14 @@ bot::bot(const unsigned int X, const unsigned int Y, bot* parent, size_t N, cons
 	}
 	heapPtr = 0;
 
-	assert(coorX >= 0 && coorX < WORLD_WIDTH);
-	assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
 	coorX = X; coorY = Y;
+	world[X][Y] = N;
 
 	condition = alive;
 	direct = down;
 	decompose = 0;
 
-
-	auto a = bots.begin(); //Итератор для вставки
-
-	//Если нет родителей - вставляем в конец вектора
-	if (parent == nullptr) {
-		bots.push_back(*this);
-		world[X][Y] = N;
-	}
-	else {
-		//Если N больше размера вектора - вставляем на место родителя
-		if (N >= bots.size()) {
-			n = parent->n;
-			a = bots.begin() + n;
-			bots.insert(a, *this);
-		}
-		//В лучшем случае - используем непосредственно N
-		else {
-			a = bots.begin() + N;
-			n = N;
-			bots.insert(a, *this);
-		}
-
-		world[X][Y] = n;
-
-		size_t i = n;
-		if (i == 0)
-			i = 0;
-		else
-			i--;
-		//Обновление итераторов
-		for (i; i < bots.size(); i++) { 
-			bots[i].n = i;
-			int x = bots[i].coorX;
-			int y = bots[i].coorY;
-
-			assert(x >= 0 && x < WORLD_WIDTH);
-			assert(y > 0 && y <= WORLD_HEIGHT + 1);
-			world[bots[i].coorX][bots[i].coorY] = i;
-
-			long long nLong = static_cast<long long>(n);
-			if (bots[i].chainPrev > nLong)
-				bots[i].chainPrev -= 1;
-			if (bots[i].chainNext > nLong)
-				bots[i].chainNext -= 1;
-		}
-	}
+	ownId = N;
 }
 
 void bot::incIP(unsigned int num) {
@@ -199,12 +153,25 @@ bool bot::isRelative(bot _bot) {
 	if (_bot.condition < alive) //Если _bot - органика
 		return false;
 
-	size_t dif = 0; //Cчётчик несовпадений в геноме
+	size_t diff = 0; //Cчётчик несовпадений в геноме
 	for (size_t i = 0; i < DNA_SIZE; i++) //Поячеечно сверяем геномы
-		if (DNA[i] != _bot.DNA[i]) {
-			dif++;
-			if (dif > MUT_COEF) return false; //Если несовпадений > стандартное кол-во мутаций, то боты не родственники
-		}
+		if (DNA[i] != _bot.DNA[i])
+			if (++diff > MUT_COEF) //Если несовпадений > стандартное кол-во мутаций, то боты не родственники
+				return false; 
+
+	return true;
+}
+
+bool bot::isRelative(bot* _bot) {
+	if (_bot->condition < alive) //Если _bot - органика
+		return false;
+
+	size_t diff = 0; //Cчётчик несовпадений в геноме
+	for (size_t i = 0; i < DNA_SIZE; i++) //Поячеечно сверяем геномы
+		if (DNA[i] != _bot->DNA[i])
+			if (++diff > MUT_COEF) //Если несовпадений > стандартное кол-во мутаций, то боты не родственники
+				return false; 
+
 	return true;
 }
 
@@ -259,8 +226,11 @@ void bot::step() {
 	if (handler == SIG_ERR)
 		std::cerr << "Signal setup failed\n";
 
-	//Если бот - органика, выходим
-	if (condition == organic) {
+	//Если бот — мёртв, выходим
+	if (std::find(begin(deleted), end(deleted), ownId) != end(deleted))
+		return;
+	//Если бот — органика, выходим
+	else if (condition == organic) {
 		decompose++;
 		if (decompose >= DECOMPOSE_TIME) {
 			death();
@@ -270,14 +240,14 @@ void bot::step() {
 		//Падение органики
 		if (world[coorX][coorY + 1] == empty) {
 			world[coorX][coorY] = empty;
-			world[coorX][coorY + 1] = n;
+			world[coorX][coorY + 1] = ownId;
 			coorY++;
 		}
 		return;
 	}
 
 	//
-	//Если мы здесь, то бот живой
+	//Если мы здесь — бот живой
 	//
 
 	//Если бот не находится в состоянии приёма
@@ -344,11 +314,8 @@ void bot::step() {
 				unsigned int x = getX(param + direct); //Получаем координаты клетки
 				unsigned int y = getY(param + direct); //
 
-				long long size = static_cast<long long>(bots.size());
-				assert(world[x][y] < size || world[x][y] == wall);
-
 				if (world[x][y] == empty) { //Если на клетке пусто
-					world[x][y] = n;
+					world[x][y] = ownId;
 					world[coorX][coorY] = empty;
 					coorX = x;
 					coorY = y;
@@ -357,7 +324,7 @@ void bot::step() {
 				else if (world[x][y] == wall) { //Если на клетке стена
 					incIP(3);
 				}
-				else if (bots[world[x][y]].condition == organic) { //Если на клетке органика
+				else if (bots[world[x][y]]->condition == organic) { //Если на клетке органика
 					incIP(4);
 				}
 				else if (isRelative(bots[world[x][y]])) { //Если на клетке родня
@@ -389,11 +356,8 @@ void bot::step() {
 				unsigned int x = getX(param); //Получаем координаты клетки
 				unsigned int y = getY(param); //
 
-				long long size = static_cast<long long>(bots.size());
-				assert(world[x][y] < size || world[x][y] == wall);
-
 				if (world[x][y] == empty) { //Если на клетке пусто
-					world[x][y] = n;
+					world[x][y] = ownId;
 					world[coorX][coorY] = empty;
 					coorX = x;
 					coorY = y;
@@ -402,7 +366,7 @@ void bot::step() {
 				else if (world[x][y] == wall) { //Если на клетке стена
 					incIP(3);
 				}
-				else if (bots[world[x][y]].condition == organic) { //Если на клетке органика
+				else if (bots[world[x][y]]->condition == organic) { //Если на клетке органика
 					incIP(4);
 				}
 				else if (isRelative(bots[world[x][y]])) { //Если на клетке родня
@@ -430,17 +394,14 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size || world[x][y] == wall);
-
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
 			}
 			else if (world[x][y] == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[world[x][y]].condition == organic) { //Если там оказалась органика
-				bots[world[x][y]].death(); //Удаляем жертву
+			else if (bots[world[x][y]]->condition == organic) { //Если там оказалась органика
+				bots[world[x][y]]->death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
 				incIP(4);
@@ -450,14 +411,14 @@ void bot::step() {
 				//--------- дошли до сюда, значит впереди живой бот -------------------
 				//
 				int min0 = minrNum; //Кол-во минералов у бота
-				int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
-				int hl = bots[world[x][y]].energy;  //Кол-во энергии
+				int min1 = bots[world[x][y]]->minrNum; //Кол-во минералов у потенциального обеда
+				int hl = bots[world[x][y]]->energy;  //Кол-во энергии
 
 				//Если у бота минералов больше
 				if (min0 >= min1) {
 					minrNum -= min1;  //Количество минералов у бота уменьшается на количество минералов у жертвы
 													  //Типа, стесал свои зубы о панцирь жертвы)
-					bots[world[x][y]].death(); //Удаляем жертву
+					bots[world[x][y]]->death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
 					goRed(static_cast<short>(hl));                //Бот краснеет
 					incIP(5);
@@ -468,14 +429,14 @@ void bot::step() {
 					min1 -= min0; //Но и у обеда они уменьшились
 					//Если энергии в 2 раза больше
 					if (energy >= 2 * min1) {
-						bots[world[x][y]].death(); //Удаляем жертву
+						bots[world[x][y]]->death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
 						goRed(static_cast<short>(hl));                //Бот краснеет
 						incIP(5);
 					}
 					//Если энергии меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы 
 					else {
-						bots[world[x][y]].minrNum = min1 - (energy / 2); //Жертва истрачивает свои минералы
+						bots[world[x][y]]->minrNum = min1 - (energy / 2); //Жертва истрачивает свои минералы
 						energy = -10; //Энергия уходит в минус
 						incIP(5);
 					}
@@ -498,17 +459,14 @@ void bot::step() {
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size || world[x][y] == wall);
-
 			if (world[x][y] == empty) { //Если пусто
 				incIP(2);
 			}
 			else if (world[x][y] == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[world[x][y]].condition == organic) { //Если там оказалась органика
-				bots[world[x][y]].death(); //Удаляем жертву
+			else if (bots[world[x][y]]->condition == organic) { //Если там оказалась органика
+				bots[world[x][y]]->death(); //Удаляем жертву
 				energy += 100;            //Прибавка к энергии
 				goRed(100);               //Бот краснеет
 				incIP(4);
@@ -518,14 +476,14 @@ void bot::step() {
 				//--------- дошли до сюда, значит впереди живой бот -------------------
 				//
 				int min0 = minrNum; //Кол-во минералов у бота
-				int min1 = bots[world[x][y]].minrNum; //Кол-во минералов у потенциального обеда
-				int hl = bots[world[x][y]].energy;  //Кол-во энергии
+				int min1 = bots[world[x][y]]->minrNum; //Кол-во минералов у потенциального обеда
+				int hl = bots[world[x][y]]->energy;  //Кол-во энергии
 
 				//Если у бота минералов больше
 				if (min0 >= min1) {
 					minrNum -= min1;  //Количество минералов у бота уменьшается на количество минералов у жертвы
 													  //Типа, стесал свои зубы о панцирь жертвы)
-					bots[world[x][y]].death(); //Удаляем жертву
+					bots[world[x][y]]->death(); //Удаляем жертву
 					energy += 100 + (hl / 2); //Kоличество энергии у бота прибавляется на 100 + (половина от энергии жертвы)
 					goRed(static_cast<short>(hl));                //Бот краснеет
 					incIP(5);
@@ -536,14 +494,14 @@ void bot::step() {
 					min1 -= min0; //Но и у обеда они уменьшились
 					//Если энергии в 2 раза больше
 					if (energy >= 2 * min1) {
-						bots[world[x][y]].death(); //Удаляем жертву
+						bots[world[x][y]]->death(); //Удаляем жертву
 						energy += 100 + (hl / 2) - 2 * min1;
 						goRed(static_cast<short>(hl));                //Бот краснеет
 						incIP(5);
 					}
 					//Если энергии меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы 
 					else {
-						bots[world[x][y]].minrNum = min1 - (energy / 2); //Жертва истрачивает свои минералы
+						bots[world[x][y]]->minrNum = min1 - (energy / 2); //Жертва истрачивает свои минералы
 						energy = -10; //Энергия уходит в минус
 						incIP(5);
 					}
@@ -567,16 +525,13 @@ void bot::step() {
 			unsigned int y = getY(param + direct); //
 			long long wc = world[x][y]; //Определяем объект
 
-			long long size = static_cast<long long>(bots.size());
-			assert(wc < size);
-
 			if (wc == empty) { //Если пусто
 				incIP(2);
 			}
 			else if (wc == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[wc].condition == organic) { //Если органика
+			else if (bots[wc]->condition == organic) { //Если органика
 				incIP(4);
 			}
 			else if (isRelative(bots[wc])) { //Если родня
@@ -602,16 +557,13 @@ void bot::step() {
 			unsigned int y = getY(param); //
 			long long wc = world[x][y]; //Определяем объект
 
-			long long size = static_cast<long long>(bots.size());
-			assert(wc < size);
-
 			if (wc == empty) { //Если пусто
 				incIP(2);
 			}
 			else if (wc == wall) { //Если стена
 				incIP(3);
 			}
-			else if (bots[wc].condition == organic) { //Если органика
+			else if (bots[wc]->condition == organic) { //Если органика
 				incIP(4);
 			}
 			else if (isRelative(bots[wc])) { //Если родня
@@ -635,32 +587,30 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Вычисляем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size || world[x][y] == wall);
 
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
 			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition == organic) //Если органика
+			else if (bots[world[x][y]]->condition == organic) //Если органика
 				incIP(4);
 			else { //Остался один вариант - впереди живой бот
 				int hlt0 = energy;                   // определим количество энергии и минералов
-				int hlt1 = bots[world[x][y]].energy; // у бота и его соседа
+				int hlt1 = bots[world[x][y]]->energy; // у бота и его соседа
 				int min0 = minrNum;
-				int min1 = bots[world[x][y]].minrNum;
+				int min1 = bots[world[x][y]]->minrNum;
 
 				if (hlt0 > hlt1) //Eсли у бота больше энергии, чем у соседа
 				{
 					int hlt = (hlt0 - hlt1) / 2; //Tо распределяем энергию поровну
 					energy -= hlt;
-					bots[world[x][y]].energy += hlt;
+					bots[world[x][y]]->energy += hlt;
 				}
 				if (min0 > min1) //Если у бота больше минералов, чем у соседа
 				{
 					int min = (min0 - min1) / 2; //То распределяем их поровну
 					minrNum -= min;
-					bots[world[x][y]].minrNum += min;
+					bots[world[x][y]]->minrNum += min;
 				}
 				incIP(5);
 			}
@@ -679,32 +629,29 @@ void bot::step() {
 			unsigned int x = getX(param); //Вычисляем координаты клетки
 			unsigned int y = getY(param); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size || world[x][y] == wall);
-
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
 			else if (world[x][y] == empty)  //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition == organic) //Если органика
+			else if (bots[world[x][y]]->condition == organic) //Если органика
 				incIP(4);
 			else { //Остался один вариант - впереди живой бот
 				int hlt0 = energy;                   // определим количество энергии и минералов
-				int hlt1 = bots[world[x][y]].energy; // у бота и его соседа
+				int hlt1 = bots[world[x][y]]->energy; // у бота и его соседа
 				int min0 = minrNum;
-				int min1 = bots[world[x][y]].minrNum;
+				int min1 = bots[world[x][y]]->minrNum;
 
 				if (hlt0 > hlt1) //Eсли у бота больше энергии, чем у соседа
 				{
 					int hlt = (hlt0 - hlt1) / 2; //Tо распределяем энергию поровну
 					energy -= hlt;
-					bots[world[x][y]].energy += hlt;
+					bots[world[x][y]]->energy += hlt;
 				}
 				if (min0 > min1) //Если у бота больше минералов, чем у соседа
 				{
 					int min = (min0 - min1) / 2; //То распределяем их поровну
 					minrNum -= min;
-					bots[world[x][y]].minrNum += min;
+					bots[world[x][y]]->minrNum += min;
 				}
 				incIP(5);
 			}
@@ -729,24 +676,21 @@ void bot::step() {
 			unsigned int x = getX(param + direct); //Получаем координаты клетки
 			unsigned int y = getY(param + direct); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size || world[x][y] == wall);
-
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
 			else if (world[x][y] == empty) //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition == organic) //Если органика
+			else if (bots[world[x][y]]->condition == organic) //Если органика
 				incIP(4);
 			else { //Если бот
 				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
-				bots[world[x][y]].energy += (energy / 4);
+				bots[world[x][y]]->energy += (energy / 4);
 
 				if (minrNum >= 4) { //Если у бота минералов больше 4
 					minrNum -= (minrNum / 4); //Бот отдаёт четверть свох минералов
-					bots[world[x][y]].minrNum += (minrNum / 4);
-					if (bots[world[x][y]].minrNum > 999)
-						bots[world[x][y]].minrNum = 999;
+					bots[world[x][y]]->minrNum += (minrNum / 4);
+					if (bots[world[x][y]]->minrNum > 999)
+						bots[world[x][y]]->minrNum = 999;
 				}
 			}
 		}
@@ -764,24 +708,21 @@ void bot::step() {
 			unsigned int x = getX(param); //Получаем координаты клетки
 			unsigned int y = getY(param); //
 
-			long long size = static_cast<long long>(bots.size());
-			assert(world[x][y] < size);
-
 			if (world[x][y] == wall) //Если стена
 				incIP(2);
 			else if (world[x][y] == empty) //Если пусто
 				incIP(3);
-			else if (bots[world[x][y]].condition == organic) //Если органика
+			else if (bots[world[x][y]]->condition == organic) //Если органика
 				incIP(4);
 			else { //Если бот
 				energy -= (energy / 4); //Бот отдаёт четверть своей энергии
-				bots[world[x][y]].energy += (energy / 4);
+				bots[world[x][y]]->energy += (energy / 4);
 
 				if (minrNum >= 4) { //Если у бота минералов больше 4
 					minrNum -= (minrNum / 4); //Бот отдаёт четверть свох минералов
-					bots[world[x][y]].minrNum += (minrNum / 4);
-					if (bots[world[x][y]].minrNum > 999)
-						bots[world[x][y]].minrNum = 999;
+					bots[world[x][y]]->minrNum += (minrNum / 4);
+					if (bots[world[x][y]]->minrNum > 999)
+						bots[world[x][y]]->minrNum = 999;
 				}
 			}
 		}
@@ -876,10 +817,12 @@ void bot::step() {
 
 			incIP(1);
 			a = static_cast<unsigned short>(a); //C4244
+			id_t tmpId = currentId++;
+
 			if (chainNext > -1 && chainPrev > -1)
-				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+				bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, CHAIN);
 			else
-				b = new bot(getX(a), getY(a), this, n + 1, FREE);
+				bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, FREE);
 
 			break;
 		}
@@ -989,10 +932,12 @@ void bot::step() {
 
 			incIP(1);
 			a = static_cast<unsigned short>(a); //C4244
+			id_t tmpId = currentId++;
+
 			if (chainNext > -1 && chainPrev > -1)
-				b = new bot(getX(a), getY(a), this, n + 1, FREE);
+				bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, CHAIN);
 			else
-				b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+				bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, FREE);
 
 			break;
 		}
@@ -1758,15 +1703,12 @@ void bot::step() {
 	
 	//Если бот в цепочке
 	if (chainNext > -1 && chainPrev > -1) {
-		long long size = static_cast<long long>(bots.size());
-		assert(chainNext < size);
-		assert(chainPrev < size);
 
 		//Делим минералы
-		unsigned int min = minrNum + bots[chainNext].minrNum + bots[chainPrev].minrNum;
+		unsigned int min = minrNum + bots[chainNext]->minrNum + bots[chainPrev]->minrNum;
 		minrNum = (min / 3) + (min % 3);
-		bots[chainNext].minrNum = min;
-		bots[chainPrev].minrNum = min;
+		bots[chainNext]->minrNum = min;
+		bots[chainPrev]->minrNum = min;
 
 		//Делим энергию
 		//
@@ -1774,36 +1716,32 @@ void bot::step() {
 		//Если они не являются крайними, то распределяем энергию поровну
 		//Связано это с тем, что в крайних ботах в цепочке должно быть больше энергии
 		//Чтобы они плодили новых ботов и удлиняли цепочку
-		if ((bots[chainNext].chainNext > -1 || bots[chainNext].chainPrev > -1) && (bots[chainPrev].chainNext > -1 || bots[chainPrev].chainPrev > -1)) {
-			unsigned int hlt = (energy + bots[chainNext].energy + bots[chainPrev].energy);
+		if ((bots[chainNext]->chainNext > -1 || bots[chainNext]->chainPrev > -1) && (bots[chainPrev]->chainNext > -1 || bots[chainPrev]->chainPrev > -1)) {
+			unsigned int hlt = (energy + bots[chainNext]->energy + bots[chainPrev]->energy);
 			energy = (min / 3) + (min % 3);
-			bots[chainNext].energy = hlt;
-			bots[chainPrev].energy = hlt;
+			bots[chainNext]->energy = hlt;
+			bots[chainPrev]->energy = hlt;
 		}
 	}
 	//Если бот имеет предыдущего в цепочке
 	else if (chainPrev > -1) { 
-		long long size = static_cast<long long>(bots.size());
-		assert(chainPrev < size);
 
 		//Если предыдущий не является крайним в цепочке
-		if (bots[chainPrev].chainNext > -1 && bots[chainPrev].chainPrev > -1) {
+		if (bots[chainPrev]->chainNext > -1 && bots[chainPrev]->chainPrev > -1) {
 			//То распределяем энергию в пользу текущёго бота
-			unsigned int hlt = energy + bots[chainPrev].energy;
-			bots[chainPrev].energy = (hlt / 4) + (hlt % 4);
+			unsigned int hlt = energy + bots[chainPrev]->energy;
+			bots[chainPrev]->energy = (hlt / 4) + (hlt % 4);
 			energy = hlt / 4 * 3;
 		}
 	}
 	//Если бот имеет следущего в цепочке
 	else if (chainNext > -1) { 
-		long long size = static_cast<long long>(bots.size());
-		assert(chainNext < size);
 
 		//Если предыдущий не является крайним в цепочке
-		if (bots[chainNext].chainNext > -1 && bots[chainNext].chainPrev > -1) {
+		if (bots[chainNext]->chainNext > -1 && bots[chainNext]->chainPrev > -1) {
 			//То распределяем энергию в пользу текущёго бота
-			unsigned int hlt = energy + bots[chainNext].energy;
-			bots[chainNext].energy = (hlt / 4) + (hlt % 4);
+			unsigned int hlt = energy + bots[chainNext]->energy;
+			bots[chainNext]->energy = (hlt / 4) + (hlt % 4);
 			energy = hlt / 4 * 3;
 		}
 	}
@@ -1831,19 +1769,13 @@ void bot::step() {
 	if (energy < 1 || (_born && (energy / 2) < 1)) {
 		condition = organic; //Отмечаем как органику
 
-		long long size = static_cast<long long>(bots.size());
 		//Если состоит во многоклеточной цепочке - удаляем
-		if (chainPrev > -1) {
-			assert(chainPrev < size);
-			bots[chainPrev].chainNext = -1;
-		}
-		if (chainNext > -1) {
-			assert(chainNext < size);
-			bots[chainNext].chainPrev = -1;
-		}
+		if (chainPrev != -1)
+			bots[chainPrev]->chainNext = -1;
+		if (chainNext != -1)
+			bots[chainNext]->chainPrev = -1;
 	}
 
-	assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
 	//Если бот глубже, чем MAX_Y / 2, то он начинает накапливать минералы
 	if (coorY > (MAX_Y / 2))
 		minrNum++;
@@ -1862,57 +1794,29 @@ void bot::step() {
 			delete b;
 
 		a = static_cast<unsigned short>(a); //C4244
-		if (chainNext < -1 && chainPrev < -1)
-			b = new bot(getX(a), getY(a), this, n + 1, FREE);
+		id_t tmpId = currentId++;
+
+		if (chainNext > -1 && chainPrev > -1)
+			bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, CHAIN);
 		else
-			b = new bot(getX(a), getY(a), this, n + 1, CHAIN);
+			bots[tmpId] = new bot(getX(a), getY(a), this, tmpId, FREE);
 	}
 }
 
 void bot::death() {
-	//Вычисляем итератор через адрес
-	//С++03 гарантирует непрерывное хранение элементов в памяти вектора
-	//В долгосрочной перспективе работать не будет, но для функции удаления сойдёт
-	n = this - &bots[0];
-
 	auto handler = std::signal(SIGABRT, signal_handler);
 	if (handler == SIG_ERR)
 		std::cerr << "Signal setup failed\n";
 	else {
-		assert(coorX >= 0 && coorX < WORLD_WIDTH);
-		assert(coorY > 0 && coorY <= WORLD_HEIGHT + 1);
 		world[coorX][coorY] = empty; //Удаление бота с карты
 	}
 
-	assert(n < bots.size());
-	auto a = bots.begin() + n; //Из вектора
-	bots.erase(a);             //
-
-	size_t i = n;
-	if (i == 0)
-		i = 0;
-	else
-		i--;
-	//Обновление итераторов
-	for (i; i < bots.size(); i++) {
-		bots[i].n = i;
-		int x = bots[i].coorX;
-		int y = bots[i].coorY;
-		assert(x >= 0 && x < WORLD_WIDTH);
-		assert(y > 0 && y <= WORLD_HEIGHT + 1);
-		world[x][y] = i;
-
-		long long nLong = static_cast<long long>(n);
-		if (bots[i].chainPrev > nLong)
-			bots[i].chainPrev -= 1;
-		if (bots[i].chainNext > nLong)
-			bots[i].chainNext -= 1;
-	}
+	deleted.push_back(ownId);
 
 	if (chainPrev > -1) //Если во многоклеточной цепочке - тоже удаляем
-		bots[chainPrev].chainNext = -1;
+		bots[chainPrev]->chainNext = -1;
 	if (chainNext > -1)
-		bots[chainNext].chainPrev = -1;
+		bots[chainNext]->chainPrev = -1;
 }
 
 //Необязательная функция
@@ -1920,6 +1824,6 @@ void bot::death() {
 //находящихся на самом верхнем уровне
 void radiation() {
 	for (size_t i = 0; i < WORLD_WIDTH; i++)
-		if (world[i][1] != empty)
-			bots[world[i][1]].DNA[getRandomNumber(0, 255)] = getRandomNumber<short>(0, 255);
+		if (world[i][1] != empty && world[i][1] != wall)
+			bots[world[i][1]]->DNA[getRandomNumber(0, DNA_MAX_INDEX)] = getRandomNumber<short>(0, 255);
 }

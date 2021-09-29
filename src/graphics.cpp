@@ -12,7 +12,7 @@ extern uint_fast64_t lifeCount;
 extern uint_fast64_t EnterlifeCount;
 extern int season;
 
-extern std::pmr::vector<bot> bots;
+extern std::map<id_t, bot*> bots;
 
 gui::LTexture::LTexture() {
 	//Initialize
@@ -289,24 +289,25 @@ void gui::checkEvents() {
 void gui::draw() {
 	SDL_RenderClear(gRenderer);
 
-	for (size_t i = 0; i < bots.size(); i++) {
+	for (auto pair : bots) {
+		auto bot = std::get<1>(pair);
 		//Отрисовка живого бота
-		if (bots[i].condition == alive) {
+		if (bot->condition == alive) {
 			if (paintMode) //Если включён стандартный режим отрисовки
-				gSpriteBot.setColor(bots[i].red, bots[i].green, bots[i].blue);
+				gSpriteBot.setColor(bot->red, bot->green, bot->blue);
 			else
-				gSpriteBot.setColor(0xFF, 255 - (bots[i].energy / 4), 0x00);
+				gSpriteBot.setColor(0xFF, 255 - (bot->energy / 4), 0x00);
 
-			gSpriteBot.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
+			gSpriteBot.render((bot->coorX * 4), ((bot->coorY - 1) * 4), &gSpriteClips[0]);
 		}
 		//Отрисовка органики
-		else if (bots[i].condition = organic) {
+		else if (bot->condition = organic) {
 			if (paintMode)
 				gSpriteOrganic.setColor(0xFF, 0xFF, 0xFF);
 			else
 				gSpriteOrganic.setColor(0xE4, 0x7F, 0xF6);
 
-			gSpriteOrganic.render((bots[i].coorX * 4), ((bots[i].coorY - 1) * 4), &gSpriteClips[0]);
+			gSpriteOrganic.render((bot->coorX * 4), ((bot->coorY - 1) * 4), &gSpriteClips[0]);
 		}
 	}
 
